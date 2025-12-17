@@ -55,14 +55,7 @@
             </intent-filter>
         </activity>
         
-        <!-- Firebase messaging service -->
-        <service
-            android:name=".DoorphoneMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
+
         
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
