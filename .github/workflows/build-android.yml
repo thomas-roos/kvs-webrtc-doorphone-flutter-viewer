@@ -74,16 +74,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pub-
           
-    # Cache Android SDK
-    - name: Cache Android SDK
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ env.ANDROID_SDK_ROOT }}
-          ${{ env.ANDROID_HOME }}
-        key: ${{ runner.os }}-android-sdk-${{ hashFiles('android/app/build.gradle') }}
-        restore-keys: |
-          ${{ runner.os }}-android-sdk-
+
         
     - name: Get Flutter dependencies
       working-directory: .
