@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+// Firebase disabled for now
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'core/app_config.dart';
 import 'core/theme/app_theme.dart';
@@ -14,20 +15,18 @@ import 'ui/screens/home_screen.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/screens/config_screen.dart';
 
-// Background message handler for Firebase
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  print('Handling a background message: ${message.messageId}');
-}
+// Background message handler for Firebase - DISABLED
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp();
+//   print('Handling a background message: ${message.messageId}');
+// }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
-
-  // Set up background message handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // Firebase initialization disabled for now
+  // await Firebase.initializeApp();
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const DoorphoneViewerApp());
 }

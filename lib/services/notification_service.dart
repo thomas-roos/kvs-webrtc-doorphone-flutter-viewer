@@ -1,7 +1,30 @@
 import 'dart:async';
-import 'package:firebase_messaging/firebase_messaging.dart';
+// Firebase disabled for now
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import '../models/doorbell_event.dart';
 import 'doorphone_manager.dart';
+
+// Simplified RemoteMessage class for when Firebase is disabled
+class RemoteMessage {
+  final String? messageId;
+  final Map<String, dynamic> data;
+  final RemoteNotification? notification;
+  final DateTime? sentTime;
+
+  RemoteMessage({
+    this.messageId,
+    required this.data,
+    this.notification,
+    this.sentTime,
+  });
+}
+
+class RemoteNotification {
+  final String? title;
+  final String? body;
+
+  RemoteNotification({this.title, this.body});
+}
 
 abstract class NotificationService {
   Future<void> initialize();
@@ -13,7 +36,7 @@ abstract class NotificationService {
 
 class NotificationServiceImpl implements NotificationService {
   final DoorphoneManager _doorphoneManager;
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  // Firebase disabled - using local notification stream only
   final StreamController<RemoteMessage> _notificationController =
       StreamController<RemoteMessage>.broadcast();
 
@@ -30,11 +53,8 @@ class NotificationServiceImpl implements NotificationService {
   @override
   Future<void> initialize() async {
     try {
-      // Request permissions
-      await requestPermissions();
-
-      // Configure Firebase Messaging
-      await _configureFirebaseMessaging();
+      // Firebase disabled - simplified initialization
+      print('NotificationService: Firebase disabled, using local notifications only');
 
       // Subscribe to doorbell events from doorphone manager
       _doorbellSubscription = _doorphoneManager.doorbellEvents.listen(
@@ -42,7 +62,7 @@ class NotificationServiceImpl implements NotificationService {
       );
 
       _isInitialized = true;
-      print('NotificationService: Initialized');
+      print('NotificationService: Initialized (Firebase disabled)');
     } catch (e) {
       print('NotificationService: Initialization failed - $e');
       rethrow;
@@ -51,41 +71,15 @@ class NotificationServiceImpl implements NotificationService {
 
   @override
   Future<void> requestPermissions() async {
-    try {
-      final settings = await _firebaseMessaging.requestPermission(
-        alert: true,
-        announcement: false,
-        badge: true,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
-        sound: true,
-      );
-
-      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        print('NotificationService: Permissions granted');
-      } else if (settings.authorizationStatus ==
-          AuthorizationStatus.provisional) {
-        print('NotificationService: Provisional permissions granted');
-      } else {
-        print('NotificationService: Permissions denied');
-      }
-    } catch (e) {
-      print('NotificationService: Permission request failed - $e');
-      rethrow;
-    }
+    // Firebase disabled - no FCM permissions needed
+    print('NotificationService: Firebase disabled, skipping FCM permissions');
   }
 
   @override
   Future<String?> getToken() async {
-    try {
-      final token = await _firebaseMessaging.getToken();
-      print('NotificationService: FCM Token - $token');
-      return token;
-    } catch (e) {
-      print('NotificationService: Failed to get FCM token - $e');
-      return null;
-    }
+    // Firebase disabled - no FCM token available
+    print('NotificationService: Firebase disabled, no FCM token available');
+    return null;
   }
 
   @override
@@ -117,7 +111,7 @@ class NotificationServiceImpl implements NotificationService {
       // For now, we'll just log and emit the event
       print('NotificationService: Doorbell notification for ${event.deviceId}');
 
-      // Create a RemoteMessage-like object for consistency
+      // Create a local notification message
       final message = RemoteMessage(
         messageId: event.id,
         data: notificationData,
@@ -134,32 +128,10 @@ class NotificationServiceImpl implements NotificationService {
     }
   }
 
-  Future<void> _configureFirebaseMessaging() async {
-    // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('NotificationService: Foreground message received');
-      _handleForegroundMessage(message);
-    });
-
-    // Handle background messages (when app is in background but not terminated)
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('NotificationService: Background message opened app');
-      _handleBackgroundMessage(message);
-    });
-
-    // Handle messages when app is terminated
-    final initialMessage = await _firebaseMessaging.getInitialMessage();
-    if (initialMessage != null) {
-      print('NotificationService: App opened from terminated state');
-      _handleTerminatedMessage(initialMessage);
-    }
-
-    // Subscribe to token refresh
-    _firebaseMessaging.onTokenRefresh.listen((String token) {
-      print('NotificationService: FCM token refreshed - $token');
-      // Here you would typically send the new token to your backend
-    });
-  }
+  // Firebase messaging configuration disabled
+  // Future<void> _configureFirebaseMessaging() async {
+  //   // Firebase disabled - no FCM configuration needed
+  // }
 
   void _handleForegroundMessage(RemoteMessage message) {
     _notificationController.add(message);

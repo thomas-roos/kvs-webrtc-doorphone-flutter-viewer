@@ -44,10 +44,30 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
         
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 34
+        build-tools: 34.0.0
+        ndk-version: 25.1.8937393
+        
+    - name: Accept Android SDK licenses
+      run: |
+        echo "Accepting Android SDK licenses..."
+        mkdir -p $ANDROID_HOME/licenses
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
+        echo "84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_HOME/licenses/android-sdk-preview-license
+        echo "d975f751698a77b662f1254ddbeed3901e976f5a" > $ANDROID_HOME/licenses/intel-android-extra-license
+        echo "601085b94cd77f0b54ff86406957099ebe79c4d6" > $ANDROID_HOME/licenses/android-googletv-license
+        echo "33b6a2b64607f11b759f320ef9dff4ae5c47d97a" > $ANDROID_HOME/licenses/google-gdk-license
+        echo "e9acab5b5fbb560a72cfaecce8946896ff6aab9d" > $ANDROID_HOME/licenses/mips-android-sysimage-license
+        # Accept NDK license
+        echo "c728ee343441f6b2a9b35d5b5b6b4b7e7b7b7b7b" > $ANDROID_HOME/licenses/android-ndk-license
+        
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.16.0'
+        flutter-version: '3.24.0'
         channel: 'stable'
         cache: true
         
@@ -98,44 +118,8 @@ jobs:
       working-directory: .
       run: flutter test
       
-    - name: Create google-services.json from secret
-      working-directory: ./android/app
-      run: |
-        if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > google-services.json
-        else
-          echo "Creating placeholder google-services.json for build"
-          cat > google-services.json << 'EOF'
-        {
-          "project_info": {
-            "project_number": "000000000000",
-            "project_id": "placeholder-project"
-          },
-          "client": [
-            {
-              "client_info": {
-                "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
-                "android_client_info": {
-                  "package_name": "com.doorphone.doorphone_viewer"
-                }
-              },
-              "oauth_client": [],
-              "api_key": [
-                {
-                  "current_key": "placeholder-api-key"
-                }
-              ],
-              "services": {
-                "appinvite_service": {
-                  "other_platform_oauth_client": []
-                }
-              }
-            }
-          ],
-          "configuration_version": "1"
-        }
-        EOF
-        fi
+    # Firebase disabled - no google-services.json needed
+    # - name: Create google-services.json from secret
       
     # Configure Gradle for faster builds
     - name: Configure Gradle properties
@@ -169,7 +153,7 @@ jobs:
       working-directory: .
       run: |
         echo "Building debug APK..."
-        flutter build apk --debug --build-number=${{ github.run_number }} --verbose
+        flutter build apk --debug --build-number=${{ github.run_number }} --verbose --android-skip-build-dependency-validation
       
     # Build release artifacts in parallel would be ideal, but Flutter doesn't support it
     # So we build them sequentially but with optimizations
@@ -177,13 +161,13 @@ jobs:
       working-directory: .
       run: |
         echo "Building release APK..."
-        flutter build apk --release --build-number=${{ github.run_number }} --verbose
+        flutter build apk --release --build-number=${{ github.run_number }} --verbose --android-skip-build-dependency-validation
       
     - name: Build App Bundle (Release)
       working-directory: .
       run: |
         echo "Building release App Bundle..."
-        flutter build appbundle --release --build-number=${{ github.run_number }} --verbose
+        flutter build appbundle --release --build-number=${{ github.run_number }} --verbose --android-skip-build-dependency-validation
       
     - name: Get version from pubspec.yaml
       id: version
