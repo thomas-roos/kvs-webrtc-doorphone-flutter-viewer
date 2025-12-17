@@ -25,6 +25,11 @@
 -dontwarn org.apache.harmony.xnet.provider.jsse.**
 -keep class org.conscrypt.** { *; }
 
+# Google Play Core rules (for Flutter deferred components)
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }
+-keep interface com.google.android.play.core.** { *; }
+
 # WebRTC rules
 -keep class org.webrtc.** { *; }
 -dontwarn org.webrtc.**
