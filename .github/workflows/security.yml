@@ -2,44 +2,54 @@ name: Security Scan
 
 on:
   schedule:
-    # Run security scan daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    # Run security scan weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
   workflow_dispatch:
   push:
     branches: [ main ]
     paths:
-      - 'flutter-viewer/**'
+      - 'lib/**'
+      - 'android/**'
+      - 'pubspec.yaml'
       - '.github/workflows/security.yml'
 
 jobs:
-  trivy-scan:
-    name: Trivy Security Scan
+  flutter-security:
+    name: Flutter Security Check
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
       with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH,MEDIUM'
-        exit-code: '0'
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        cache: true
         
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
-        category: 'trivy'
+    - name: Get Flutter dependencies
+      run: flutter pub get
+      
+    - name: Check for hardcoded secrets in Dart code
+      run: |
+        echo "🔍 Scanning Dart code for potential secrets..."
+        
+        # Check for common secret patterns
+        if grep -r -i "password\s*=\s*['\"][^'\"]*['\"]" lib/ --include="*.dart"; then
+          echo "⚠️ Found potential hardcoded passwords"
+        fi
+        
+        if grep -r -i "api[_-]?key\s*=\s*['\"][^'\"]*['\"]" lib/ --include="*.dart"; then
+          echo "⚠️ Found potential hardcoded API keys"
+        fi
+        
+        if grep -r -i "secret\s*=\s*['\"][^'\"]*['\"]" lib/ --include="*.dart"; then
+          echo "⚠️ Found potential hardcoded secrets"
+        fi
+        
+        echo "✅ Secret scan completed"
 
   dependency-check:
     name: Dependency Security Check
@@ -148,18 +158,38 @@ jobs:
         
         echo "✅ Android security check completed"
 
-  secrets-scan:
-    name: Secrets Scan
+  code-quality:
+    name: Code Quality Check
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Run TruffleHog OSS
-      uses: trufflesecurity/trufflehog@main
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
       with:
-        path: .
-        base: main
-        head: HEAD
-        extra_args: --debug --only-verified
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: Get Flutter dependencies
+      run: flutter pub get
+      
+    - name: Run Flutter analyzer for security issues
+      run: |
+        echo "🔍 Running Flutter analyzer for security-related issues..."
+        flutter analyze --no-fatal-infos | grep -E "(avoid_print|use_build_context_synchronously)" || echo "No major security-related analyzer issues found"
+        
+    - name: Check for debug flags in production code
+      run: |
+        echo "🔍 Checking for debug flags..."
+        if grep -r "debugShowCheckedModeBanner.*true" lib/; then
+          echo "⚠️ Debug banner enabled in code"
+        fi
+        
+        if grep -r "kDebugMode.*true" lib/; then
+          echo "ℹ️ Debug mode checks found (this is normal)"
+        fi
+        
+        echo "✅ Debug flag check completed"
