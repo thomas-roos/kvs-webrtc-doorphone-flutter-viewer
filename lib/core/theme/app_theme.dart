@@ -27,13 +27,11 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
         secondary: secondaryColor,
-        background: backgroundColor,
-        surface: surfaceColor,
+        surface: backgroundColor,
         error: errorColor,
         onPrimary: onPrimary,
         onSecondary: onSecondary,
-        onBackground: onBackground,
-        onSurface: onSurface,
+        onSurface: onBackground,
         onError: onError,
       ),
       appBarTheme: const AppBarTheme(
@@ -72,13 +70,11 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: primaryColor,
         secondary: secondaryColor,
-        background: darkBackgroundColor,
-        surface: darkSurfaceColor,
+        surface: darkBackgroundColor,
         error: errorColor,
         onPrimary: onPrimary,
         onSecondary: onSecondary,
-        onBackground: darkOnBackground,
-        onSurface: darkOnSurface,
+        onSurface: darkOnBackground,
         onError: onError,
       ),
       appBarTheme: const AppBarTheme(

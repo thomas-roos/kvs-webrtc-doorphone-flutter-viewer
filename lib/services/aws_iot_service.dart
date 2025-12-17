@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-import '../core/app_config.dart';
+
+import '../core/utils/logger.dart';
 
 enum MQTTConnectionState { disconnected, connecting, connected, error }
 
@@ -20,6 +21,8 @@ abstract class AWSIoTService {
 }
 
 class AWSIoTServiceImpl implements AWSIoTService {
+  static const Logger _logger = Logger('AWSIoTService');
+  
   late MqttServerClient _mqttClient;
   final StreamController<MQTTConnectionState> _connectionStateController =
       StreamController<MQTTConnectionState>.broadcast();
@@ -51,16 +54,16 @@ class AWSIoTServiceImpl implements AWSIoTService {
       // Set up connection state listeners
       _mqttClient.onConnected = () {
         _updateConnectionState(MQTTConnectionState.connected);
-        print('AWS IoT MQTT: Connected');
+        _logger.info('AWS IoT MQTT: Connected');
       };
 
       _mqttClient.onDisconnected = () {
         _updateConnectionState(MQTTConnectionState.disconnected);
-        print('AWS IoT MQTT: Disconnected');
+        _logger.info('AWS IoT MQTT: Disconnected');
       };
 
       _mqttClient.onSubscribed = (String topic) {
-        print('AWS IoT MQTT: Subscribed to $topic');
+        _logger.info('AWS IoT MQTT: Subscribed to $topic');
       };
 
       // Set up message listener
@@ -77,9 +80,9 @@ class AWSIoTServiceImpl implements AWSIoTService {
       });
 
       _isInitialized = true;
-      print('AWS IoT MQTT: Initialized');
+      _logger.info('AWS IoT MQTT: Initialized');
     } catch (e) {
-      print('AWS IoT MQTT: Initialization failed - $e');
+      _logger.error('AWS IoT MQTT: Initialization failed', e);
       _updateConnectionState(MQTTConnectionState.error);
       rethrow;
     }
@@ -96,21 +99,21 @@ class AWSIoTServiceImpl implements AWSIoTService {
 
       // For demo purposes, we'll simulate a connection
       // In a real implementation, you would set up AWS IoT certificates here
-      print('AWS IoT MQTT: Attempting connection (simulated)');
-      print('AWS IoT MQTT: Endpoint: $_mqttClient.server');
-      print('AWS IoT MQTT: Client ID: ${_mqttClient.clientIdentifier}');
+      _logger.info('AWS IoT MQTT: Attempting connection (simulated)');
+      _logger.debug('AWS IoT MQTT: Endpoint: ${_mqttClient.server}');
+      _logger.debug('AWS IoT MQTT: Client ID: ${_mqttClient.clientIdentifier}');
 
       // Simulate connection delay
       await Future.delayed(const Duration(seconds: 2));
 
       // For now, we'll just mark as connected for demo purposes
       _updateConnectionState(MQTTConnectionState.connected);
-      print('AWS IoT MQTT: Connected (simulated)');
+      _logger.info('AWS IoT MQTT: Connected (simulated)');
       
       // Subscribe to doorphone topics
       await _subscribeToDoorphoneTopics();
     } catch (e) {
-      print('AWS IoT MQTT: Connection failed - $e');
+      _logger.error('AWS IoT MQTT: Connection failed', e);
       _updateConnectionState(MQTTConnectionState.error);
       rethrow;
     }
@@ -127,13 +130,13 @@ class AWSIoTServiceImpl implements AWSIoTService {
       ];
       
       for (final topic in topics) {
-        print('AWS IoT MQTT: Subscribing to $topic');
+        _logger.debug('AWS IoT MQTT: Subscribing to $topic');
         // In real implementation, would call _mqttClient.subscribe()
       }
       
-      print('AWS IoT MQTT: Subscribed to ${topics.length} topics');
+      _logger.info('AWS IoT MQTT: Subscribed to ${topics.length} topics');
     } catch (e) {
-      print('AWS IoT MQTT: Subscription failed - $e');
+      _logger.error('AWS IoT MQTT: Subscription failed', e);
     }
   }
 
@@ -143,7 +146,7 @@ class AWSIoTServiceImpl implements AWSIoTService {
       _mqttClient.disconnect();
       _updateConnectionState(MQTTConnectionState.disconnected);
     } catch (e) {
-      print('AWS IoT MQTT: Disconnect failed - $e');
+      _logger.error('AWS IoT MQTT: Disconnect failed', e);
     }
   }
 
@@ -158,17 +161,17 @@ class AWSIoTServiceImpl implements AWSIoTService {
 
     try {
       _subscriptions[topic] = callback;
-      print('AWS IoT MQTT: Subscribed to $topic (simulated)');
+      _logger.info('AWS IoT MQTT: Subscribed to $topic (simulated)');
       
       // For testing: simulate a doorbell message after 5 seconds if it's a doorbell topic
       if (topic.contains('doorbell')) {
-        print('AWS IoT MQTT: Will simulate doorbell message in 5 seconds for testing');
+        _logger.debug('AWS IoT MQTT: Will simulate doorbell message in 5 seconds for testing');
         Timer(const Duration(seconds: 5), () {
           _simulateDoorbellMessage(topic, callback);
         });
       }
     } catch (e) {
-      print('AWS IoT MQTT: Subscription failed for $topic - $e');
+      _logger.error('AWS IoT MQTT: Subscription failed for $topic', e);
       rethrow;
     }
   }
@@ -185,7 +188,7 @@ class AWSIoTServiceImpl implements AWSIoTService {
       }
     };
     
-    print('AWS IoT MQTT: Simulating doorbell message: $testMessage');
+    _logger.debug('AWS IoT MQTT: Simulating doorbell message: $testMessage');
     callback(topic, testMessage);
   }
 
@@ -198,9 +201,9 @@ class AWSIoTServiceImpl implements AWSIoTService {
     try {
       final jsonMessage = jsonEncode(message);
       // For demo purposes, simulate publishing
-      print('AWS IoT MQTT: Published to $topic (simulated): $jsonMessage');
+      _logger.info('AWS IoT MQTT: Published to $topic (simulated): $jsonMessage');
     } catch (e) {
-      print('AWS IoT MQTT: Publish failed for $topic - $e');
+      _logger.error('AWS IoT MQTT: Publish failed for $topic', e);
       rethrow;
     }
   }
@@ -221,7 +224,7 @@ class AWSIoTServiceImpl implements AWSIoTService {
         }
       }
     } catch (e) {
-      print('AWS IoT MQTT: Message parsing failed for $topic - $e');
+      _logger.error('AWS IoT MQTT: Message parsing failed for $topic', e);
     }
   }
 
@@ -257,22 +260,7 @@ class AWSIoTServiceImpl implements AWSIoTService {
     return true;
   }
 
-  Future<void> _attemptReconnection() async {
-    int attempts = 0;
-    while (attempts < AppConfig.maxReconnectionAttempts && !isConnected) {
-      attempts++;
-      print('AWS IoT MQTT: Reconnection attempt $attempts');
 
-      await Future.delayed(AppConfig.reconnectionDelay);
-
-      try {
-        await connect();
-        break;
-      } catch (e) {
-        print('AWS IoT MQTT: Reconnection attempt $attempts failed - $e');
-      }
-    }
-  }
 
   void dispose() {
     _connectionStateController.close();

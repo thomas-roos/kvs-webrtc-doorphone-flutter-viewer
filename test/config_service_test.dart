@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../lib/services/config_service.dart';
-import '../lib/models/aws_config.dart';
+import 'package:doorphone_viewer/services/config_service.dart';
+import 'package:doorphone_viewer/models/aws_config.dart';
 
 void main() {
   group('ConfigService Tests', () {
@@ -25,7 +25,7 @@ void main() {
 
     test('should save and retrieve AWS config correctly', () async {
       // Create test config
-      final testConfig = AWSConfig(
+      const testConfig = AWSConfig(
         region: 'us-east-1',
         iotEndpoint: 'test-endpoint.iot.us-east-1.amazonaws.com',
         kvsChannelArn: 'arn:aws:kinesisvideo:us-east-1:123456789012:channel/test-channel',
@@ -51,7 +51,7 @@ void main() {
     });
 
     test('should return true for hasValidConfig when valid config exists', () async {
-      final testConfig = AWSConfig(
+      const testConfig = AWSConfig(
         region: 'us-west-2',
         iotEndpoint: 'test-endpoint.iot.us-west-2.amazonaws.com',
         kvsChannelArn: 'arn:aws:kinesisvideo:us-west-2:123456789012:channel/test-channel',
@@ -66,7 +66,7 @@ void main() {
 
     test('should clear config correctly', () async {
       // Save a config first
-      final testConfig = AWSConfig(
+      const testConfig = AWSConfig(
         region: 'eu-west-1',
         iotEndpoint: 'test-endpoint.iot.eu-west-1.amazonaws.com',
         kvsChannelArn: 'arn:aws:kinesisvideo:eu-west-1:123456789012:channel/test-channel',
@@ -86,7 +86,7 @@ void main() {
     });
 
     test('should handle config without session token', () async {
-      final testConfig = AWSConfig(
+      const testConfig = AWSConfig(
         region: 'ap-southeast-1',
         iotEndpoint: 'test-endpoint.iot.ap-southeast-1.amazonaws.com',
         kvsChannelArn: 'arn:aws:kinesisvideo:ap-southeast-1:123456789012:channel/test-channel',
@@ -126,7 +126,7 @@ void main() {
     });
 
     test('should convert AWSConfig to JSON correctly', () {
-      final config = AWSConfig(
+      const config = AWSConfig(
         region: 'us-west-2',
         iotEndpoint: 'test-endpoint.iot.us-west-2.amazonaws.com',
         kvsChannelArn: 'arn:aws:kinesisvideo:us-west-2:123456789012:channel/test-channel',
@@ -145,7 +145,7 @@ void main() {
     });
 
     test('should support copyWith method', () {
-      final originalConfig = AWSConfig(
+      const originalConfig = AWSConfig(
         region: 'us-east-1',
         iotEndpoint: 'original-endpoint.iot.us-east-1.amazonaws.com',
         kvsChannelArn: 'arn:aws:kinesisvideo:us-east-1:123456789012:channel/original-channel',

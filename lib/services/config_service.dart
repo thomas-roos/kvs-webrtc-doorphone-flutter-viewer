@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/aws_config.dart';
+import '../core/utils/logger.dart';
 
 abstract class ConfigService {
   Future<AWSConfig?> getAWSConfig();
@@ -10,6 +11,7 @@ abstract class ConfigService {
 }
 
 class ConfigServiceImpl implements ConfigService {
+  static const Logger _logger = Logger('ConfigService');
   static const String _awsConfigKey = 'aws_config';
 
   @override
@@ -23,7 +25,7 @@ class ConfigServiceImpl implements ConfigService {
       final configMap = json.decode(configJson) as Map<String, dynamic>;
       return AWSConfig.fromJson(configMap);
     } catch (e) {
-      print('Error loading AWS config: $e');
+      _logger.error('Error loading AWS config', e);
       return null;
     }
   }
@@ -35,7 +37,7 @@ class ConfigServiceImpl implements ConfigService {
       final configJson = json.encode(config.toJson());
       await prefs.setString(_awsConfigKey, configJson);
     } catch (e) {
-      print('Error saving AWS config: $e');
+      _logger.error('Error saving AWS config', e);
       throw Exception('Failed to save configuration');
     }
   }
@@ -46,7 +48,7 @@ class ConfigServiceImpl implements ConfigService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_awsConfigKey);
     } catch (e) {
-      print('Error clearing AWS config: $e');
+      _logger.error('Error clearing AWS config', e);
     }
   }
 

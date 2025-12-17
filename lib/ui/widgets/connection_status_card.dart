@@ -59,21 +59,21 @@ class ConnectionStatusCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
+                      color: Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Column(
+                    child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
+                      children: <Widget>[
+                        Text(
                           'Troubleshooting:',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 4),
-                        const Text('• Check AWS credentials in settings'),
-                        const Text('• Verify IoT endpoint is correct'),
-                        const Text('• Ensure device has internet connection'),
-                        const Text('• Check AWS IoT policies and permissions'),
+                        SizedBox(height: 4),
+                        Text('• Check AWS credentials in settings'),
+                        Text('• Verify IoT endpoint is correct'),
+                        Text('• Ensure device has internet connection'),
+                        Text('• Check AWS IoT policies and permissions'),
                       ],
                     ),
                   ),

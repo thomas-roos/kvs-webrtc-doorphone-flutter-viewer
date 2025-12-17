@@ -1,7 +1,6 @@
 // This is a basic test file for the doorphone viewer app.
 // In a real application, you would write comprehensive tests for your widgets and logic.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:doorphone_viewer/models/doorphone_device.dart';

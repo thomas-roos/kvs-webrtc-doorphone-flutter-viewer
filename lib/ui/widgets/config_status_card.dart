@@ -52,7 +52,7 @@ class _ConfigStatusCardState extends State<ConfigStatusCard> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange),
+                  const Icon(Icons.warning, color: Colors.orange),
                   const SizedBox(width: 8),
                   Text(
                     'Configuration Required',
@@ -76,7 +76,7 @@ class _ConfigStatusCardState extends State<ConfigStatusCard> {
           children: [
             Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green),
+                const Icon(Icons.check_circle, color: Colors.green),
                 const SizedBox(width: 8),
                 Text(
                   'Configuration Status',

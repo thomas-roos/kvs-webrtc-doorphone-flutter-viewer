@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import '../core/utils/logger.dart';
 
 enum WebRTCSignalingState { idle, connecting, connected, failed }
 
@@ -38,9 +39,11 @@ abstract class KVSWebRTCService {
 }
 
 class KVSWebRTCServiceImpl implements KVSWebRTCService {
+  static const Logger _logger = Logger('KVSWebRTCService');
+  
   WebSocketChannel? _signalingChannel;
   RTCPeerConnection? _peerConnection;
-  MediaStream? _remoteStream;
+
 
   final StreamController<Map<String, dynamic>> _signalingController =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -51,7 +54,7 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
 
   WebRTCSignalingState _currentState = WebRTCSignalingState.idle;
   bool _isInitialized = false;
-  String? _currentChannelName;
+
 
   @override
   Stream<Map<String, dynamic>> get signalingMessages =>
@@ -74,9 +77,9 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
       await _setupWebRTCConfiguration();
 
       _isInitialized = true;
-      print('KVS WebRTC: Initialized for channel $channelName (simulated)');
+      _logger.info('Initialized for channel $channelName (simulated)');
     } catch (e) {
-      print('KVS WebRTC: Initialization failed - $e');
+      _logger.error('Initialization failed', e);
       _updateConnectionState(WebRTCSignalingState.failed);
       rethrow;
     }
@@ -90,11 +93,9 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
 
     try {
       // For demo purposes, simulate signaling channel creation
-      print(
-        'KVS WebRTC: Signaling channel created for $channelName (simulated)',
-      );
+      _logger.info('Signaling channel created for $channelName (simulated)');
     } catch (e) {
-      print('KVS WebRTC: Failed to create signaling channel - $e');
+      _logger.error('Failed to create signaling channel', e);
       rethrow;
     }
   }
@@ -115,9 +116,9 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
       await Future.delayed(const Duration(seconds: 1));
 
       _updateConnectionState(WebRTCSignalingState.connected);
-      print('KVS WebRTC: Connected as viewer to $channelName (simulated)');
+      _logger.info('Connected as viewer to $channelName (simulated)');
     } catch (e) {
-      print('KVS WebRTC: Failed to connect as viewer - $e');
+      _logger.error('Failed to connect as viewer', e);
       _updateConnectionState(WebRTCSignalingState.failed);
       rethrow;
     }
@@ -130,9 +131,9 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     }
 
     try {
-      print('KVS WebRTC: Offer sent (simulated)');
+      _logger.debug('Offer sent (simulated)');
     } catch (e) {
-      print('KVS WebRTC: Failed to send offer - $e');
+      _logger.error('Failed to send offer', e);
       rethrow;
     }
   }
@@ -144,9 +145,9 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     }
 
     try {
-      print('KVS WebRTC: Answer sent (simulated)');
+      _logger.debug('Answer sent (simulated)');
     } catch (e) {
-      print('KVS WebRTC: Failed to send answer - $e');
+      _logger.error('Failed to send answer', e);
       rethrow;
     }
   }
@@ -158,9 +159,9 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     }
 
     try {
-      print('KVS WebRTC: ICE candidate sent (simulated)');
+      _logger.debug('ICE candidate sent (simulated)');
     } catch (e) {
-      print('KVS WebRTC: Failed to send ICE candidate - $e');
+      _logger.error('Failed to send ICE candidate', e);
       rethrow;
     }
   }
@@ -171,15 +172,15 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
       await _peerConnection?.close();
       _signalingChannel?.sink.close();
       _updateConnectionState(WebRTCSignalingState.idle);
-      print('KVS WebRTC: Disconnected');
+      _logger.info('Disconnected');
     } catch (e) {
-      print('KVS WebRTC: Disconnect failed - $e');
+      _logger.error('Disconnect failed', e);
     }
   }
 
   Future<void> _setupWebRTCConfiguration() async {
     // Configure WebRTC settings for demo
-    print('KVS WebRTC: Configuration setup completed');
+    _logger.debug('Configuration setup completed');
   }
 
   Future<void> _createPeerConnection() async {
@@ -201,12 +202,11 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     };
 
     _peerConnection!.onAddStream = (MediaStream stream) {
-      _remoteStream = stream;
       _handleRemoteStream(stream);
     };
 
     _peerConnection!.onConnectionState = (RTCPeerConnectionState state) {
-      print('KVS WebRTC: Peer connection state changed to $state');
+      _logger.debug('Peer connection state changed to $state');
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
         _updateConnectionState(WebRTCSignalingState.failed);
       }
@@ -219,9 +219,7 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     // Convert MediaStream to VideoFrame and emit
     // This is a simplified implementation - in practice, you'd need to
     // extract frames from the video track and convert them to VideoFrame objects
-    print(
-      'KVS WebRTC: Remote stream received with ${stream.getVideoTracks().length} video tracks',
-    );
+    _logger.info('Remote stream received with ${stream.getVideoTracks().length} video tracks');
 
     // For now, emit a placeholder VideoFrame
     // In a real implementation, you'd extract actual frame data

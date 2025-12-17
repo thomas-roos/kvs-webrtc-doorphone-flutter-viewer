@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_config.dart';
+import '../../core/utils/logger.dart';
 import '../../services/doorphone_manager.dart';
 import '../../services/notification_service.dart';
 import '../../services/config_service.dart';
@@ -15,6 +16,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  static const Logger _logger = Logger('SplashScreen');
+  
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -45,8 +48,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _initializeApp() async {
     try {
-      // Check if AWS configuration exists
+      // Get services before any async operations
       final configService = context.read<ConfigService>();
+      final doorphoneManager = context.read<DoorphoneManager>();
+      final notificationService = context.read<NotificationService>();
+      
+      // Check if AWS configuration exists
       final hasConfig = await configService.hasValidConfig();
 
       // Wait for minimum splash duration
@@ -68,10 +75,6 @@ class _SplashScreenState extends State<SplashScreen>
         throw Exception('Failed to load AWS configuration');
       }
 
-      // Initialize services with dynamic configuration
-      final doorphoneManager = context.read<DoorphoneManager>();
-      final notificationService = context.read<NotificationService>();
-
       // Initialize AWS IoT connection with dynamic endpoint
       await doorphoneManager.initializeAWSIoT(awsConfig.iotEndpoint);
 
@@ -83,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.of(context).pushReplacementNamed('/home');
       }
     } catch (e) {
-      print('SplashScreen: Initialization failed - $e');
+      _logger.error('Initialization failed', e);
 
       // Show error dialog
       if (mounted) {
@@ -162,7 +165,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -195,7 +198,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onPrimary.withOpacity(0.8),
+                        ).colorScheme.onPrimary.withValues(alpha: 0.8),
                       ),
                     ),
 
@@ -221,7 +224,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onPrimary.withOpacity(0.7),
+                        ).colorScheme.onPrimary.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

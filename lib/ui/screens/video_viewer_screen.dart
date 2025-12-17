@@ -218,7 +218,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.white54, size: 16),
+              const Icon(Icons.info_outline, color: Colors.white54, size: 16),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -253,7 +253,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             shape: BoxShape.circle,
             border: Border.all(color: color, width: 2),
           ),

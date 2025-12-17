@@ -4,6 +4,7 @@ import '../models/doorphone_device.dart';
 import '../models/doorbell_event.dart';
 import '../models/access_event.dart';
 import '../core/app_config.dart';
+import '../core/utils/logger.dart';
 import 'aws_iot_service.dart';
 import 'kvs_webrtc_service.dart';
 
@@ -25,6 +26,8 @@ abstract class DoorphoneManager extends ChangeNotifier {
 }
 
 class DoorphoneManagerImpl extends DoorphoneManager {
+  static const Logger _logger = Logger('DoorphoneManager');
+  
   final AWSIoTService _awsIoTService;
   final KVSWebRTCService _kvsWebRTCService;
   
@@ -75,9 +78,9 @@ class DoorphoneManagerImpl extends DoorphoneManager {
       // Subscribe to device registry and events
       await _subscribeToDeviceTopics();
       
-      print('DoorphoneManager: AWS IoT initialized');
+      _logger.info('AWS IoT initialized');
     } catch (e) {
-      print('DoorphoneManager: AWS IoT initialization failed - $e');
+      _logger.error('AWS IoT initialization failed', e);
       rethrow;
     }
   }
@@ -110,9 +113,9 @@ class DoorphoneManagerImpl extends DoorphoneManager {
       _activeDevice = connectedDevice;
       
       notifyListeners();
-      print('DoorphoneManager: Connected to device $deviceId');
+      _logger.info('Connected to device $deviceId');
     } catch (e) {
-      print('DoorphoneManager: Failed to connect to device $deviceId - $e');
+      _logger.error('Failed to connect to device $deviceId', e);
       final errorDevice = device.copyWith(status: DeviceStatus.error);
       _updateDevice(errorDevice);
       rethrow;
@@ -133,9 +136,9 @@ class DoorphoneManagerImpl extends DoorphoneManager {
       }
       
       notifyListeners();
-      print('DoorphoneManager: Disconnected from device $deviceId');
+      _logger.info('Disconnected from device $deviceId');
     } catch (e) {
-      print('DoorphoneManager: Failed to disconnect from device $deviceId - $e');
+      _logger.error('Failed to disconnect from device $deviceId', e);
     }
   }
 
@@ -175,7 +178,7 @@ class DoorphoneManagerImpl extends DoorphoneManager {
     };
 
     await publishMQTTMessage(commandTopic, command);
-    print('DoorphoneManager: Unlock command sent to $deviceId');
+    _logger.info('Unlock command sent to $deviceId');
   }
 
   @override
@@ -191,7 +194,7 @@ class DoorphoneManagerImpl extends DoorphoneManager {
     };
 
     await publishMQTTMessage(commandTopic, command);
-    print('DoorphoneManager: Lock command sent to $deviceId');
+    _logger.info('Lock command sent to $deviceId');
   }
 
   Future<void> _subscribeToDeviceTopics() async {
@@ -226,7 +229,7 @@ class DoorphoneManagerImpl extends DoorphoneManager {
         _handleGeneralEventMessage(message);
       }
     } catch (e) {
-      print('DoorphoneManager: Failed to handle MQTT message - $e');
+      _logger.error('Failed to handle MQTT message', e);
     }
   }
 
@@ -235,7 +238,7 @@ class DoorphoneManagerImpl extends DoorphoneManager {
       final device = DoorphoneDevice.fromJson(message);
       _addOrUpdateDevice(device);
     } catch (e) {
-      print('DoorphoneManager: Failed to parse device registry message - $e');
+      _logger.error('Failed to parse device registry message', e);
     }
   }
 
@@ -244,9 +247,9 @@ class DoorphoneManagerImpl extends DoorphoneManager {
       final event = DoorbellEvent.fromJson(message);
       _eventHistory.add(event);
       _doorbellEventsController.add(event);
-      print('DoorphoneManager: Doorbell event received for device ${event.deviceId}');
+      _logger.info('Doorbell event received for device ${event.deviceId}');
     } catch (e) {
-      print('DoorphoneManager: Failed to parse doorbell message - $e');
+      _logger.error('Failed to parse doorbell message', e);
     }
   }
 
@@ -254,9 +257,9 @@ class DoorphoneManagerImpl extends DoorphoneManager {
     try {
       final event = AccessEvent.fromJson(message);
       _accessEventsController.add(event);
-      print('DoorphoneManager: Access event received for device ${event.deviceId}');
+      _logger.info('Access event received for device ${event.deviceId}');
     } catch (e) {
-      print('DoorphoneManager: Failed to parse access message - $e');
+      _logger.error('Failed to parse access message', e);
     }
   }
 
@@ -269,7 +272,7 @@ class DoorphoneManagerImpl extends DoorphoneManager {
         _doorbellEventsController.add(event);
       }
     } catch (e) {
-      print('DoorphoneManager: Failed to parse general event message - $e');
+      _logger.error('Failed to parse general event message', e);
     }
   }
 

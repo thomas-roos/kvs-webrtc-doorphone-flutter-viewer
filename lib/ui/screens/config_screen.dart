@@ -92,6 +92,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
   }
 
   Future<void> _clearConfig() async {
+    final configService = context.read<ConfigService>();
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -115,7 +117,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
       setState(() => _isLoading = true);
 
       try {
-        final configService = context.read<ConfigService>();
         await configService.clearAWSConfig();
 
         // Clear form fields
@@ -365,7 +366,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
+                  color: Colors.amber.withValues(alpha: 0.1),
                   border: Border.all(color: Colors.amber),
                   borderRadius: BorderRadius.circular(8),
                 ),
