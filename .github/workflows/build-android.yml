@@ -1,0 +1,198 @@
+name: Build and Release Android APK
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: Get Flutter dependencies
+      working-directory: ./flutter-viewer
+      run: flutter pub get
+      
+    - name: Run Flutter analyzer
+      working-directory: ./flutter-viewer
+      run: flutter analyze
+      
+    - name: Run Flutter tests
+      working-directory: ./flutter-viewer
+      run: flutter test
+      
+    - name: Create google-services.json from secret
+      working-directory: ./flutter-viewer/android/app
+      run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > google-services.json
+      
+    - name: Create AWS certificates directory
+      working-directory: ./flutter-viewer
+      run: mkdir -p assets/certificates
+      
+    - name: Create placeholder certificates (for build only)
+      working-directory: ./flutter-viewer/assets/certificates
+      run: |
+        echo "# Placeholder certificate for build" > certificate.pem.crt
+        echo "# Placeholder private key for build" > private.pem.key
+        echo "# Placeholder root CA for build" > AmazonRootCA1.pem
+        
+    - name: Build APK (Debug)
+      working-directory: ./flutter-viewer
+      run: flutter build apk --debug
+      
+    - name: Build APK (Release)
+      working-directory: ./flutter-viewer
+      run: flutter build apk --release
+      
+    - name: Build App Bundle (Release)
+      working-directory: ./flutter-viewer
+      run: flutter build appbundle --release
+      
+    - name: Get version from pubspec.yaml
+      id: version
+      working-directory: ./flutter-viewer
+      run: |
+        VERSION=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+        BUILD_NUMBER=$(grep '^version:' pubspec.yaml | cut -d '+' -f 2)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+        echo "full_version=$VERSION+$BUILD_NUMBER" >> $GITHUB_OUTPUT
+        
+    - name: Rename APK files
+      working-directory: ./flutter-viewer
+      run: |
+        mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/doorphone-viewer-debug-${{ steps.version.outputs.full_version }}.apk
+        mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.apk
+        mv build/app/outputs/bundle/release/app-release.aab build/app/outputs/bundle/release/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.aab
+        
+    - name: Upload Debug APK as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: doorphone-viewer-debug-apk
+        path: flutter-viewer/build/app/outputs/flutter-apk/doorphone-viewer-debug-${{ steps.version.outputs.full_version }}.apk
+        
+    - name: Upload Release APK as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: doorphone-viewer-release-apk
+        path: flutter-viewer/build/app/outputs/flutter-apk/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.apk
+        
+    - name: Upload App Bundle as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: doorphone-viewer-release-aab
+        path: flutter-viewer/build/app/outputs/bundle/release/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.aab
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Get version from tag
+      id: tag_version
+      run: |
+        TAG=${GITHUB_REF#refs/tags/}
+        VERSION=${TAG#v}
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+    - name: Download Release APK
+      uses: actions/download-artifact@v3
+      with:
+        name: doorphone-viewer-release-apk
+        path: ./artifacts
+        
+    - name: Download App Bundle
+      uses: actions/download-artifact@v3
+      with:
+        name: doorphone-viewer-release-aab
+        path: ./artifacts
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.tag_version.outputs.tag }}
+        name: Doorphone Viewer ${{ steps.tag_version.outputs.version }}
+        body: |
+          ## Doorphone Viewer ${{ steps.tag_version.outputs.version }}
+          
+          ### 📱 Android Release
+          
+          **APK File**: Install directly on Android devices
+          **AAB File**: For Google Play Store distribution
+          
+          ### 🔧 Features
+          - Real-time video streaming via AWS KVS WebRTC
+          - Remote door control via AWS IoT MQTT
+          - Push notifications for doorbell events
+          - Multi-device support
+          - Material Design 3 UI
+          
+          ### 📋 Requirements
+          - Android 5.0 (API level 21) or higher
+          - Camera and microphone permissions
+          - Internet connection
+          - AWS IoT and KVS configuration
+          
+          ### 🔐 Security Note
+          This build uses placeholder certificates. For production use, configure your own AWS IoT certificates and Firebase configuration.
+          
+          ---
+          
+          **Installation**: Download the APK file and install on your Android device. You may need to enable "Install from unknown sources" in your device settings.
+          
+        files: |
+          ./artifacts/*.apk
+          ./artifacts/*.aab
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Build Status Notification
+      run: |
+        if [ "${{ needs.build.result }}" == "success" ]; then
+          echo "✅ Build completed successfully"
+        else
+          echo "❌ Build failed"
+          exit 1
+        fi
+        
+        if [ "${{ needs.release.result }}" == "success" ] && [ "${{ needs.release.result }}" != "skipped" ]; then
+          echo "🚀 Release published successfully"
+        elif [ "${{ needs.release.result }}" == "skipped" ]; then
+          echo "⏭️ Release skipped (not a tag push)"
+        else
+          echo "❌ Release failed"
+        fi

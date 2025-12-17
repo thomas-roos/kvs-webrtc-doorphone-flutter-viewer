@@ -1,0 +1,205 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:aws_iot_mqtt/aws_iot_mqtt.dart';
+import '../core/app_config.dart';
+
+enum MQTTConnectionState {
+  disconnected,
+  connecting,
+  connected,
+  error,
+}
+
+abstract class AWSIoTService {
+  Future<void> initialize(String endpoint, String certificatePath, String privateKeyPath);
+  Future<void> connect();
+  Future<void> disconnect();
+  Future<void> subscribe(String topic, Function(String, Map<String, dynamic>) callback);
+  Future<void> publish(String topic, Map<String, dynamic> message);
+  Stream<MQTTConnectionState> get connectionState;
+  bool get isConnected;
+}
+
+class AWSIoTServiceImpl implements AWSIoTService {
+  late AWSIoTMQTT _mqttClient;
+  final StreamController<MQTTConnectionState> _connectionStateController =
+      StreamController<MQTTConnectionState>.broadcast();
+  final Map<String, Function(String, Map<String, dynamic>)> _subscriptions = {};
+  
+  MQTTConnectionState _currentState = MQTTConnectionState.disconnected;
+  bool _isInitialized = false;
+
+  @override
+  Stream<MQTTConnectionState> get connectionState => _connectionStateController.stream;
+
+  @override
+  bool get isConnected => _currentState == MQTTConnectionState.connected;
+
+  @override
+  Future<void> initialize(String endpoint, String certificatePath, String privateKeyPath) async {
+    try {
+      _mqttClient = AWSIoTMQTT(
+        endpoint: endpoint,
+        certificatePath: certificatePath,
+        privateKeyPath: privateKeyPath,
+        clientId: 'doorphone_viewer_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      // Set up connection state listeners
+      _mqttClient.onConnected = () {
+        _updateConnectionState(MQTTConnectionState.connected);
+        print('AWS IoT MQTT: Connected');
+      };
+
+      _mqttClient.onDisconnected = () {
+        _updateConnectionState(MQTTConnectionState.disconnected);
+        print('AWS IoT MQTT: Disconnected');
+      };
+
+      _mqttClient.onConnectionLost = (String cause) {
+        _updateConnectionState(MQTTConnectionState.error);
+        print('AWS IoT MQTT: Connection lost - $cause');
+        _attemptReconnection();
+      };
+
+      _mqttClient.onMessageReceived = (String topic, String message) {
+        _handleMessage(topic, message);
+      };
+
+      _isInitialized = true;
+      print('AWS IoT MQTT: Initialized');
+    } catch (e) {
+      print('AWS IoT MQTT: Initialization failed - $e');
+      _updateConnectionState(MQTTConnectionState.error);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> connect() async {
+    if (!_isInitialized) {
+      throw Exception('AWS IoT service not initialized');
+    }
+
+    try {
+      _updateConnectionState(MQTTConnectionState.connecting);
+      await _mqttClient.connect();
+    } catch (e) {
+      print('AWS IoT MQTT: Connection failed - $e');
+      _updateConnectionState(MQTTConnectionState.error);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> disconnect() async {
+    try {
+      await _mqttClient.disconnect();
+      _updateConnectionState(MQTTConnectionState.disconnected);
+    } catch (e) {
+      print('AWS IoT MQTT: Disconnect failed - $e');
+    }
+  }
+
+  @override
+  Future<void> subscribe(String topic, Function(String, Map<String, dynamic>) callback) async {
+    if (!isConnected) {
+      throw Exception('Not connected to AWS IoT');
+    }
+
+    try {
+      _subscriptions[topic] = callback;
+      await _mqttClient.subscribe(topic);
+      print('AWS IoT MQTT: Subscribed to $topic');
+    } catch (e) {
+      print('AWS IoT MQTT: Subscription failed for $topic - $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> publish(String topic, Map<String, dynamic> message) async {
+    if (!isConnected) {
+      throw Exception('Not connected to AWS IoT');
+    }
+
+    try {
+      final jsonMessage = jsonEncode(message);
+      await _mqttClient.publish(topic, jsonMessage);
+      print('AWS IoT MQTT: Published to $topic');
+    } catch (e) {
+      print('AWS IoT MQTT: Publish failed for $topic - $e');
+      rethrow;
+    }
+  }
+
+  void _updateConnectionState(MQTTConnectionState state) {
+    _currentState = state;
+    _connectionStateController.add(state);
+  }
+
+  void _handleMessage(String topic, String message) {
+    try {
+      final Map<String, dynamic> jsonMessage = jsonDecode(message);
+      
+      // Find matching subscription callback
+      for (final subscription in _subscriptions.entries) {
+        if (_topicMatches(subscription.key, topic)) {
+          subscription.value(topic, jsonMessage);
+        }
+      }
+    } catch (e) {
+      print('AWS IoT MQTT: Message parsing failed for $topic - $e');
+    }
+  }
+
+  bool _topicMatches(String subscriptionTopic, String receivedTopic) {
+    // Handle MQTT wildcards (+ for single level, # for multi-level)
+    final subscriptionParts = subscriptionTopic.split('/');
+    final receivedParts = receivedTopic.split('/');
+
+    if (subscriptionParts.last == '#') {
+      // Multi-level wildcard - check if prefix matches
+      final prefixParts = subscriptionParts.sublist(0, subscriptionParts.length - 1);
+      if (receivedParts.length < prefixParts.length) return false;
+      
+      for (int i = 0; i < prefixParts.length; i++) {
+        if (prefixParts[i] != '+' && prefixParts[i] != receivedParts[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (subscriptionParts.length != receivedParts.length) return false;
+
+    for (int i = 0; i < subscriptionParts.length; i++) {
+      if (subscriptionParts[i] != '+' && subscriptionParts[i] != receivedParts[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<void> _attemptReconnection() async {
+    int attempts = 0;
+    while (attempts < AppConfig.maxReconnectionAttempts && !isConnected) {
+      attempts++;
+      print('AWS IoT MQTT: Reconnection attempt $attempts');
+      
+      await Future.delayed(AppConfig.reconnectionDelay);
+      
+      try {
+        await connect();
+        break;
+      } catch (e) {
+        print('AWS IoT MQTT: Reconnection attempt $attempts failed - $e');
+      }
+    }
+  }
+
+  void dispose() {
+    _connectionStateController.close();
+    disconnect();
+  }
+}

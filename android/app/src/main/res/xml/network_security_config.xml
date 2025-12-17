@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Allow cleartext traffic for AWS IoT endpoints -->
+        <domain includeSubdomains="true">amazonaws.com</domain>
+        <domain includeSubdomains="true">aws.amazon.com</domain>
+        <!-- Add your specific AWS IoT endpoint here -->
+        <domain includeSubdomains="true">iot.us-east-1.amazonaws.com</domain>
+    </domain-config>
+    
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

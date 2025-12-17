@@ -1,0 +1,24 @@
+# Global owners
+* @your-username
+
+# Flutter app code
+flutter-viewer/ @your-username
+
+# GitHub workflows
+.github/ @your-username
+
+# Documentation
+*.md @your-username
+docs/ @your-username
+
+# AWS configuration and services
+flutter-viewer/lib/services/aws_* @your-username
+flutter-viewer/lib/services/kvs_* @your-username
+flutter-viewer/assets/certificates/ @your-username
+
+# Android specific
+flutter-viewer/android/ @your-username
+
+# CI/CD and build configuration
+.github/workflows/ @your-username
+flutter-viewer/pubspec.yaml @your-username

@@ -1,0 +1,67 @@
+name: doorphone_viewer
+description: A cross-platform Flutter doorphone viewer app with AWS KVS WebRTC and IoT MQTT integration.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # AWS Dependencies
+  aws_iot_mqtt: ^0.1.0
+  amazon_kinesis_video_webrtc_flutter: ^1.0.0
+  
+  # Core Dependencies
+  cupertino_icons: ^1.0.2
+  provider: ^6.0.5
+  shared_preferences: ^2.2.2
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  
+  # UI Dependencies
+  material_design_icons_flutter: ^7.0.7296
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.0
+  
+  # Network & Connectivity
+  connectivity_plus: ^5.0.2
+  dio: ^5.3.2
+  
+  # Permissions
+  permission_handler: ^11.0.1
+  
+  # Firebase for FCM
+  firebase_core: ^2.24.2
+  firebase_messaging: ^14.7.9
+  
+  # WebRTC
+  flutter_webrtc: ^0.9.46
+  
+  # JSON
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.7
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/certificates/
+  
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto-Regular.ttf
+        - asset: fonts/Roboto-Bold.ttf
+          weight: 700
