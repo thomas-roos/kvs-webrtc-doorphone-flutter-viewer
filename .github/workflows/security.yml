@@ -1,0 +1,165 @@
+name: Security Scan
+
+on:
+  schedule:
+    # Run security scan daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'flutter-viewer/**'
+      - '.github/workflows/security.yml'
+
+jobs:
+  trivy-scan:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: './flutter-viewer'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+        exit-code: '0'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+        category: 'trivy'
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: Get Flutter dependencies
+      working-directory: ./flutter-viewer
+      run: flutter pub get
+      
+    - name: Check for known vulnerabilities in dependencies
+      working-directory: ./flutter-viewer
+      run: |
+        echo "🔍 Checking Flutter dependencies for known vulnerabilities..."
+        
+        # Check for outdated packages
+        flutter pub outdated --json > outdated.json || true
+        
+        # Display outdated packages
+        if [ -f "outdated.json" ]; then
+          echo "📊 Outdated packages report:"
+          cat outdated.json | jq -r '.packages[] | select(.upgradable) | "\(.package): \(.current) -> \(.upgradable)"' || true
+        fi
+        
+        # Check pubspec.lock for known vulnerable packages
+        echo "🔍 Scanning pubspec.lock for known vulnerable packages..."
+        
+        # List of known vulnerable packages (update as needed)
+        VULNERABLE_PACKAGES="http_parser:3.1.3 path:1.6.4"
+        
+        for pkg in $VULNERABLE_PACKAGES; do
+          if grep -q "$pkg" pubspec.lock; then
+            echo "⚠️ Found potentially vulnerable package: $pkg"
+          fi
+        done
+        
+        echo "✅ Dependency security check completed"
+
+  android-security:
+    name: Android Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Check Android security configurations
+      working-directory: ./flutter-viewer
+      run: |
+        echo "🔍 Checking Android security configurations..."
+        
+        # Check for network security config
+        if [ -f "android/app/src/main/res/xml/network_security_config.xml" ]; then
+          echo "✅ Network security config found"
+          
+          # Check for cleartext traffic
+          if grep -q "cleartextTrafficPermitted=\"true\"" android/app/src/main/res/xml/network_security_config.xml; then
+            echo "⚠️ Cleartext traffic is permitted - review for production"
+          fi
+        else
+          echo "⚠️ No network security config found"
+        fi
+        
+        # Check AndroidManifest.xml for security issues
+        if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
+          echo "✅ AndroidManifest.xml found"
+          
+          # Check for exported activities without intent filters
+          if grep -q "android:exported=\"true\"" android/app/src/main/AndroidManifest.xml; then
+            echo "ℹ️ Exported activities found - ensure they are properly secured"
+          fi
+          
+          # Check for debug flags
+          if grep -q "android:debuggable=\"true\"" android/app/src/main/AndroidManifest.xml; then
+            echo "⚠️ Debug flag found - should be removed for production"
+          fi
+          
+          # Check for backup allowance
+          if grep -q "android:allowBackup=\"true\"" android/app/src/main/AndroidManifest.xml; then
+            echo "ℹ️ Backup is allowed - consider security implications"
+          fi
+        fi
+        
+        # Check build.gradle for security settings
+        if [ -f "android/app/build.gradle" ]; then
+          echo "✅ build.gradle found"
+          
+          # Check for minSdkVersion
+          MIN_SDK=$(grep "minSdkVersion" android/app/build.gradle | grep -o '[0-9]\+' | head -1)
+          if [ "$MIN_SDK" -lt 21 ]; then
+            echo "⚠️ minSdkVersion is below 21 - consider security implications"
+          else
+            echo "✅ minSdkVersion is $MIN_SDK (acceptable)"
+          fi
+        fi
+        
+        echo "✅ Android security check completed"
+
+  secrets-scan:
+    name: Secrets Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./flutter-viewer
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
