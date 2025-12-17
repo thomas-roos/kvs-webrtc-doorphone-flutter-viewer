@@ -21,6 +21,7 @@ abstract class DoorphoneManager extends ChangeNotifier {
   Future<void> lockDoor(String deviceId);
   Stream<DoorbellEvent> get doorbellEvents;
   Stream<AccessEvent> get accessEvents;
+  MQTTConnectionState get connectionState;
 }
 
 class DoorphoneManagerImpl extends DoorphoneManager {
@@ -58,6 +59,11 @@ class DoorphoneManagerImpl extends DoorphoneManager {
 
   @override
   Stream<AccessEvent> get accessEvents => _accessEventsController.stream;
+
+  @override
+  MQTTConnectionState get connectionState => _awsIoTService.isConnected 
+      ? MQTTConnectionState.connected 
+      : MQTTConnectionState.disconnected;
 
   @override
   Future<void> initializeAWSIoT(String endpoint) async {
