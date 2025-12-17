@@ -82,13 +82,13 @@ jobs:
         echo "Getting Flutter dependencies..."
         flutter pub get
         
-    # Pre-warm Gradle and download dependencies
+    # Pre-warm Gradle daemon
     - name: Pre-warm Gradle
       working-directory: ./android
       run: |
-        echo "Pre-warming Gradle daemon and downloading dependencies..."
+        echo "Pre-warming Gradle daemon..."
         ./gradlew --version
-        ./gradlew dependencies --configuration implementation
+        echo "Gradle daemon warmed up successfully"
       
     - name: Run Flutter analyzer
       working-directory: .
