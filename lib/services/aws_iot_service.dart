@@ -122,7 +122,7 @@ class AWSIoTServiceImpl implements AWSIoTService {
   @override
   Future<void> disconnect() async {
     try {
-      await _mqttClient.disconnect();
+      _mqttClient.disconnect();
       _updateConnectionState(MQTTConnectionState.disconnected);
     } catch (e) {
       print('AWS IoT MQTT: Disconnect failed - $e');
