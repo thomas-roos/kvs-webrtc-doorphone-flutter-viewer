@@ -74,7 +74,6 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
       await _setupWebRTCConfiguration();
 
       _isInitialized = true;
-      _currentChannelName = channelName;
       print('KVS WebRTC: Initialized for channel $channelName (simulated)');
     } catch (e) {
       print('KVS WebRTC: Initialization failed - $e');
@@ -179,15 +178,8 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
   }
 
   Future<void> _setupWebRTCConfiguration() async {
-    // Configure WebRTC settings
-    final configuration = <String, dynamic>{
-      'iceServers': [
-        {'urls': 'stun:stun.l.google.com:19302'},
-      ],
-      'sdpSemantics': 'unified-plan',
-    };
-
-    // Additional KVS-specific configuration can be added here
+    // Configure WebRTC settings for demo
+    print('KVS WebRTC: Configuration setup completed');
   }
 
   Future<void> _createPeerConnection() async {
@@ -221,69 +213,7 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     };
   }
 
-  void _handleSignalingMessage(Map<String, dynamic> message) {
-    _signalingController.add(message);
-
-    final messageType = message['messageType'] as String?;
-
-    switch (messageType) {
-      case 'SDP_OFFER':
-        _handleSdpOffer(message);
-        break;
-      case 'SDP_ANSWER':
-        _handleSdpAnswer(message);
-        break;
-      case 'ICE_CANDIDATE':
-        _handleIceCandidate(message);
-        break;
-      default:
-        print('KVS WebRTC: Unknown signaling message type: $messageType');
-    }
-  }
-
-  Future<void> _handleSdpOffer(Map<String, dynamic> message) async {
-    try {
-      final sdp = message['messagePayload'] as String;
-      await _peerConnection!.setRemoteDescription(
-        RTCSessionDescription(sdp, 'offer'),
-      );
-
-      final answer = await _peerConnection!.createAnswer();
-      await _peerConnection!.setLocalDescription(answer);
-
-      await sendAnswer({
-        'messageType': 'SDP_ANSWER',
-        'messagePayload': answer.sdp,
-      });
-    } catch (e) {
-      print('KVS WebRTC: Failed to handle SDP offer - $e');
-    }
-  }
-
-  Future<void> _handleSdpAnswer(Map<String, dynamic> message) async {
-    try {
-      final sdp = message['messagePayload'] as String;
-      await _peerConnection!.setRemoteDescription(
-        RTCSessionDescription(sdp, 'answer'),
-      );
-    } catch (e) {
-      print('KVS WebRTC: Failed to handle SDP answer - $e');
-    }
-  }
-
-  Future<void> _handleIceCandidate(Map<String, dynamic> message) async {
-    try {
-      final payload = message['messagePayload'] as Map<String, dynamic>;
-      final candidate = RTCIceCandidate(
-        payload['candidate'] as String,
-        payload['sdpMid'] as String?,
-        payload['sdpMLineIndex'] as int?,
-      );
-      await _peerConnection!.addCandidate(candidate);
-    } catch (e) {
-      print('KVS WebRTC: Failed to handle ICE candidate - $e');
-    }
-  }
+  // Signaling message handling methods removed for demo simplicity
 
   void _handleRemoteStream(MediaStream stream) {
     // Convert MediaStream to VideoFrame and emit
