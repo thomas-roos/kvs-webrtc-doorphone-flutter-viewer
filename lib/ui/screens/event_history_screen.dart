@@ -80,7 +80,7 @@ class EventHistoryScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getEventColor(event.type).withValues(alpha: 0.1),
+          backgroundColor: _getEventColor(event.type).withOpacity(0.1),
           child: Icon(
             _getEventIcon(event.type),
             color: _getEventColor(event.type),

@@ -253,7 +253,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
+            color: color.withOpacity(0.2),
             shape: BoxShape.circle,
             border: Border.all(color: color, width: 2),
           ),
