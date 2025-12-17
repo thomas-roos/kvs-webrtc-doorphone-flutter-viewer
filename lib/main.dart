@@ -9,8 +9,10 @@ import 'services/aws_iot_service.dart';
 import 'services/kvs_webrtc_service.dart';
 import 'services/doorphone_manager.dart';
 import 'services/notification_service.dart';
+import 'services/config_service.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/splash_screen.dart';
+import 'ui/screens/config_screen.dart';
 
 // Background message handler for Firebase
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -38,6 +40,7 @@ class DoorphoneViewerApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<AppConfig>(create: (_) => AppConfig()),
+        Provider<ConfigService>(create: (_) => ConfigServiceImpl()),
         Provider<AWSIoTService>(create: (_) => AWSIoTServiceImpl()),
         Provider<KVSWebRTCService>(create: (_) => KVSWebRTCServiceImpl()),
         ChangeNotifierProvider<DoorphoneManager>(
@@ -58,7 +61,10 @@ class DoorphoneViewerApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
         home: const SplashScreen(),
-        routes: {'/home': (context) => const HomeScreen()},
+        routes: {
+          '/home': (context) => const HomeScreen(),
+          '/config': (context) => const ConfigScreen(),
+        },
         debugShowCheckedModeBanner: false,
       ),
     );

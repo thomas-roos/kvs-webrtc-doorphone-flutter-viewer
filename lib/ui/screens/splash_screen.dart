@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../core/app_config.dart';
 import '../../services/doorphone_manager.dart';
 import '../../services/notification_service.dart';
+import '../../services/config_service.dart';
+import 'config_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -43,21 +45,41 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _initializeApp() async {
     try {
-      // Initialize services
+      // Check if AWS configuration exists
+      final configService = context.read<ConfigService>();
+      final hasConfig = await configService.hasValidConfig();
+
+      // Wait for minimum splash duration
+      await Future.delayed(AppConfig.splashScreenDuration);
+
+      if (!hasConfig) {
+        // Navigate to configuration screen if no valid config
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const ConfigScreen()),
+          );
+        }
+        return;
+      }
+
+      // Get AWS configuration
+      final awsConfig = await configService.getAWSConfig();
+      if (awsConfig == null) {
+        throw Exception('Failed to load AWS configuration');
+      }
+
+      // Initialize services with dynamic configuration
       final doorphoneManager = context.read<DoorphoneManager>();
       final notificationService = context.read<NotificationService>();
 
-      // Initialize AWS IoT connection
+      // Initialize AWS IoT connection with dynamic endpoint
       await doorphoneManager.initializeAWSIoT(
-        AppConfig.awsIoTEndpoint,
+        awsConfig.iotEndpoint,
         AppConfig.certificatePath,
       );
 
       // Initialize notifications
       await notificationService.initialize();
-
-      // Wait for minimum splash duration
-      await Future.delayed(AppConfig.splashScreenDuration);
 
       // Navigate to home screen
       if (mounted) {
