@@ -44,7 +44,7 @@ class DeviceCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: _getStatusColor(context).withValues(alpha: 0.1),
+                      color: _getStatusColor(context).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -85,7 +85,7 @@ class DeviceCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(context).withValues(alpha: 0.1),
+                      color: _getStatusColor(context).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -150,7 +150,7 @@ class DeviceCard extends StatelessWidget {
                       ),
                       backgroundColor: Theme.of(
                         context,
-                      ).colorScheme.surfaceContainerHighest,
+                      ).colorScheme.surfaceVariant,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     );
                   }).toList(),
@@ -165,7 +165,7 @@ class DeviceCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withValues(alpha: 0.1),
+                    ).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
