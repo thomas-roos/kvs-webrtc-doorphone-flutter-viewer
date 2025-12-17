@@ -13,12 +13,33 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
+    env:
+      # Optimize Flutter builds
+      FLUTTER_BUILD_MODE: release
+      PUB_CACHE: ${{ github.workspace }}/.pub-cache
+      # Optimize Gradle builds  
+      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g" -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+      # Android SDK optimization
+      ANDROID_COMPILE_SDK: "34"
+      ANDROID_BUILD_TOOLS: "34.0.0"
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
+    # Show build info for debugging
+    - name: Show build environment
+      run: |
+        echo "🚀 Build Environment Info:"
+        echo "Runner OS: ${{ runner.os }}"
+        echo "GitHub Run Number: ${{ github.run_number }}"
+        echo "Available disk space:"
+        df -h
+        echo "Available memory:"
+        free -h
+      
     - name: Setup Java
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '17'
@@ -30,9 +51,53 @@ jobs:
         channel: 'stable'
         cache: true
         
+    # Cache Gradle dependencies
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          android/.gradle
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    # Cache pub dependencies
+    - name: Cache pub dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ env.PUB_CACHE }}
+          ~/.pub-cache
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub-
+          
+    # Cache Android SDK
+    - name: Cache Android SDK
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ env.ANDROID_SDK_ROOT }}
+          ${{ env.ANDROID_HOME }}
+        key: ${{ runner.os }}-android-sdk-${{ hashFiles('android/app/build.gradle') }}
+        restore-keys: |
+          ${{ runner.os }}-android-sdk-
+        
     - name: Get Flutter dependencies
       working-directory: .
-      run: flutter pub get
+      run: |
+        echo "Getting Flutter dependencies..."
+        flutter pub get
+        
+    # Pre-warm Gradle and download dependencies
+    - name: Pre-warm Gradle
+      working-directory: ./android
+      run: |
+        echo "Pre-warming Gradle daemon and downloading dependencies..."
+        ./gradlew --version
+        ./gradlew dependencies --configuration implementation
       
     - name: Run Flutter analyzer
       working-directory: .
@@ -85,6 +150,22 @@ jobs:
       working-directory: .
       run: mkdir -p assets/certificates
       
+    # Configure Gradle for faster builds
+    - name: Configure Gradle properties
+      run: |
+        mkdir -p ~/.gradle
+        cat > ~/.gradle/gradle.properties << 'EOF'
+        org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError
+        org.gradle.parallel=true
+        org.gradle.caching=true
+        org.gradle.daemon=true
+        org.gradle.configureondemand=true
+        android.useAndroidX=true
+        android.enableJetifier=true
+        kotlin.incremental=true
+        kotlin.incremental.android=true
+        EOF
+      
     - name: Create placeholder certificates (for build only)
       working-directory: ./assets/certificates
       run: |
@@ -92,17 +173,37 @@ jobs:
         echo "# Placeholder private key for build" > private.pem.key
         echo "# Placeholder root CA for build" > AmazonRootCA1.pem
         
+    # Cache Flutter build outputs
+    - name: Cache Flutter build
+      uses: actions/cache@v4
+      with:
+        path: |
+          build
+          .dart_tool
+        key: ${{ runner.os }}-flutter-build-${{ hashFiles('pubspec.lock', 'android/app/build.gradle') }}
+        restore-keys: |
+          ${{ runner.os }}-flutter-build-
+        
+    # Build debug APK first (faster, good for early feedback)
     - name: Build APK (Debug)
       working-directory: .
-      run: flutter build apk --debug
+      run: |
+        echo "Building debug APK..."
+        flutter build apk --debug --build-number=${{ github.run_number }} --verbose
       
+    # Build release artifacts in parallel would be ideal, but Flutter doesn't support it
+    # So we build them sequentially but with optimizations
     - name: Build APK (Release)
       working-directory: .
-      run: flutter build apk --release
+      run: |
+        echo "Building release APK..."
+        flutter build apk --release --build-number=${{ github.run_number }} --verbose
       
     - name: Build App Bundle (Release)
       working-directory: .
-      run: flutter build appbundle --release
+      run: |
+        echo "Building release App Bundle..."
+        flutter build appbundle --release --build-number=${{ github.run_number }} --verbose
       
     - name: Get version from pubspec.yaml
       id: version
