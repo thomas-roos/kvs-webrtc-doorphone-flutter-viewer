@@ -41,7 +41,7 @@ dependencies:
   # firebase_messaging: ^14.7.9
   
   # WebRTC
-  flutter_webrtc: ^0.9.46
+  flutter_webrtc: ^1.2.1
   
   # AWS SDK (using HTTP client for AWS services)
   aws_common: ^0.6.2
