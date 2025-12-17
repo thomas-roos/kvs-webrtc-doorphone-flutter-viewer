@@ -189,9 +189,9 @@
     },
     {
       "name": "flutter_webrtc",
-      "rootUri": "file:///home/ANT.AMAZON.COM/throos/.pub-cache/hosted/pub.dev/flutter_webrtc-1.2.1",
+      "rootUri": "file:///home/ANT.AMAZON.COM/throos/.pub-cache/hosted/pub.dev/flutter_webrtc-0.9.48+hotfix.1",
       "packageUri": "lib/",
-      "languageVersion": "3.3"
+      "languageVersion": "2.12"
     },
     {
       "name": "http",
@@ -246,12 +246,6 @@
       "rootUri": "file:///home/ANT.AMAZON.COM/throos/.pub-cache/hosted/pub.dev/lints-3.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
-    },
-    {
-      "name": "logger",
-      "rootUri": "file:///home/ANT.AMAZON.COM/throos/.pub-cache/hosted/pub.dev/logger-2.6.2",
-      "packageUri": "lib/",
-      "languageVersion": "2.17"
     },
     {
       "name": "logging",
