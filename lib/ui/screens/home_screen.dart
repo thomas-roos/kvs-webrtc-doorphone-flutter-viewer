@@ -7,9 +7,11 @@ import '../../models/doorphone_device.dart';
 import '../widgets/device_card.dart';
 import '../widgets/recent_events_list.dart';
 import '../widgets/quick_actions_panel.dart';
+import '../widgets/connection_status_card.dart';
 import 'device_list_screen.dart';
 import 'video_viewer_screen.dart';
 import 'event_history_screen.dart';
+import 'debug_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -124,10 +126,20 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Doorphone Viewer'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.bug_report),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const DebugScreen()),
+              );
+            },
+            tooltip: 'Debug & Diagnostics',
+          ),
+          IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
               Navigator.of(context).pushNamed('/config');
             },
+            tooltip: 'Settings',
           ),
         ],
       ),
@@ -168,6 +180,10 @@ class _HomeTab extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Connection Status
+                const ConnectionStatusCard(),
+                const SizedBox(height: 16),
+                
                 // Active Device Section
                 if (activeDevice != null) ...[
                   Text(

@@ -105,17 +105,43 @@ class AWSIoTServiceImpl implements AWSIoTService {
       // For demo purposes, we'll simulate a connection
       // In a real implementation, you would set up AWS IoT certificates here
       print('AWS IoT MQTT: Attempting connection (simulated)');
+      print('AWS IoT MQTT: Endpoint: $_mqttClient.server');
+      print('AWS IoT MQTT: Client ID: ${_mqttClient.clientIdentifier}');
 
       // Simulate connection delay
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 2));
 
       // For now, we'll just mark as connected for demo purposes
       _updateConnectionState(MQTTConnectionState.connected);
       print('AWS IoT MQTT: Connected (simulated)');
+      
+      // Subscribe to doorphone topics
+      await _subscribeToDoorphoneTopics();
     } catch (e) {
       print('AWS IoT MQTT: Connection failed - $e');
       _updateConnectionState(MQTTConnectionState.error);
       rethrow;
+    }
+  }
+
+  Future<void> _subscribeToDoorphoneTopics() async {
+    try {
+      // Subscribe to all doorphone topics
+      final topics = [
+        'doorphone/devices/+/registry',
+        'doorphone/devices/+/events', 
+        'doorphone/devices/+/commands',
+        'doorphone/devices/+/doorbell',
+      ];
+      
+      for (final topic in topics) {
+        print('AWS IoT MQTT: Subscribing to $topic');
+        // In real implementation, would call _mqttClient.subscribe()
+      }
+      
+      print('AWS IoT MQTT: Subscribed to ${topics.length} topics');
+    } catch (e) {
+      print('AWS IoT MQTT: Subscription failed - $e');
     }
   }
 
@@ -140,12 +166,35 @@ class AWSIoTServiceImpl implements AWSIoTService {
 
     try {
       _subscriptions[topic] = callback;
-      // For demo purposes, simulate subscription
       print('AWS IoT MQTT: Subscribed to $topic (simulated)');
+      
+      // For testing: simulate a doorbell message after 5 seconds if it's a doorbell topic
+      if (topic.contains('doorbell')) {
+        print('AWS IoT MQTT: Will simulate doorbell message in 5 seconds for testing');
+        Timer(const Duration(seconds: 5), () {
+          _simulateDoorbellMessage(topic, callback);
+        });
+      }
     } catch (e) {
       print('AWS IoT MQTT: Subscription failed for $topic - $e');
       rethrow;
     }
+  }
+
+  void _simulateDoorbellMessage(String topic, Function(String, Map<String, dynamic>) callback) {
+    final testMessage = {
+      'eventId': 'test_doorbell_${DateTime.now().millisecondsSinceEpoch}',
+      'deviceId': 'test-device-001',
+      'timestamp': DateTime.now().toIso8601String(),
+      'eventType': 'doorbell_pressed',
+      'metadata': {
+        'location': 'Front Door',
+        'deviceName': 'Test Doorphone'
+      }
+    };
+    
+    print('AWS IoT MQTT: Simulating doorbell message: $testMessage');
+    callback(topic, testMessage);
   }
 
   @override
