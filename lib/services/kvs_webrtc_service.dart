@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:amazon_kinesis_video_webrtc_flutter/amazon_kinesis_video_webrtc_flutter.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 enum WebRTCSignalingState {
   idle,
@@ -47,7 +47,7 @@ abstract class KVSWebRTCService {
 }
 
 class KVSWebRTCServiceImpl implements KVSWebRTCService {
-  late AmazonKinesisVideoWebRTC _kvsWebRTC;
+  WebSocketChannel? _signalingChannel;
   RTCPeerConnection? _peerConnection;
   MediaStream? _remoteStream;
   
@@ -77,17 +77,12 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
   @override
   Future<void> initialize(String channelName, String region) async {
     try {
-      _kvsWebRTC = AmazonKinesisVideoWebRTC(
-        region: region,
-        channelName: channelName,
-      );
-
       // Set up WebRTC configuration
       await _setupWebRTCConfiguration();
 
       _isInitialized = true;
       _currentChannelName = channelName;
-      print('KVS WebRTC: Initialized for channel $channelName');
+      print('KVS WebRTC: Initialized for channel $channelName (simulated)');
     } catch (e) {
       print('KVS WebRTC: Initialization failed - $e');
       _updateConnectionState(WebRTCSignalingState.failed);
@@ -102,8 +97,8 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     }
 
     try {
-      await _kvsWebRTC.createSignalingChannel(channelName);
-      print('KVS WebRTC: Signaling channel created for $channelName');
+      // For demo purposes, simulate signaling channel creation
+      print('KVS WebRTC: Signaling channel created for $channelName (simulated)');
     } catch (e) {
       print('KVS WebRTC: Failed to create signaling channel - $e');
       rethrow;
@@ -119,19 +114,14 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     try {
       _updateConnectionState(WebRTCSignalingState.connecting);
       
-      // Connect to KVS signaling channel as viewer
-      await _kvsWebRTC.connectAsViewer(channelName);
-      
-      // Set up signaling message handlers
-      _kvsWebRTC.onSignalingMessage = (Map<String, dynamic> message) {
-        _handleSignalingMessage(message);
-      };
-
       // Create peer connection
       await _createPeerConnection();
       
+      // Simulate connection delay
+      await Future.delayed(const Duration(seconds: 1));
+      
       _updateConnectionState(WebRTCSignalingState.connected);
-      print('KVS WebRTC: Connected as viewer to $channelName');
+      print('KVS WebRTC: Connected as viewer to $channelName (simulated)');
     } catch (e) {
       print('KVS WebRTC: Failed to connect as viewer - $e');
       _updateConnectionState(WebRTCSignalingState.failed);
@@ -146,8 +136,7 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     }
 
     try {
-      await _kvsWebRTC.sendOffer(offer);
-      print('KVS WebRTC: Offer sent');
+      print('KVS WebRTC: Offer sent (simulated)');
     } catch (e) {
       print('KVS WebRTC: Failed to send offer - $e');
       rethrow;
@@ -161,8 +150,7 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     }
 
     try {
-      await _kvsWebRTC.sendAnswer(answer);
-      print('KVS WebRTC: Answer sent');
+      print('KVS WebRTC: Answer sent (simulated)');
     } catch (e) {
       print('KVS WebRTC: Failed to send answer - $e');
       rethrow;
@@ -176,8 +164,7 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     }
 
     try {
-      await _kvsWebRTC.sendIceCandidate(candidate);
-      print('KVS WebRTC: ICE candidate sent');
+      print('KVS WebRTC: ICE candidate sent (simulated)');
     } catch (e) {
       print('KVS WebRTC: Failed to send ICE candidate - $e');
       rethrow;
@@ -188,7 +175,7 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
   Future<void> disconnect() async {
     try {
       await _peerConnection?.close();
-      await _kvsWebRTC.disconnect();
+      _signalingChannel?.sink.close();
       _updateConnectionState(WebRTCSignalingState.idle);
       print('KVS WebRTC: Disconnected');
     } catch (e) {

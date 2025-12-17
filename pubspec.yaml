@@ -11,9 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # AWS Dependencies
-  aws_iot_mqtt: ^0.1.0
-  amazon_kinesis_video_webrtc_flutter: ^1.0.0
+  # AWS Dependencies (using available packages)
+  # Note: aws_iot_mqtt and KVS WebRTC packages need to be implemented or use platform channels
+  # For now, using available packages for similar functionality
+  mqtt_client: ^10.2.0
+  web_socket_channel: ^2.4.0
   
   # Core Dependencies
   cupertino_icons: ^1.0.2
@@ -40,6 +42,11 @@ dependencies:
   
   # WebRTC
   flutter_webrtc: ^0.9.46
+  
+  # AWS SDK (using HTTP client for AWS services)
+  aws_common: ^0.6.2
+  http: ^1.1.0
+  crypto: ^3.0.3
   
   # JSON
   json_annotation: ^4.8.1
