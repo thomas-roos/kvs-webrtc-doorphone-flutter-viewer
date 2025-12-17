@@ -7,11 +7,7 @@ import '../core/app_config.dart';
 enum MQTTConnectionState { disconnected, connecting, connected, error }
 
 abstract class AWSIoTService {
-  Future<void> initialize(
-    String endpoint,
-    String certificatePath,
-    String privateKeyPath,
-  );
+  Future<void> initialize(String endpoint);
   Future<void> connect();
   Future<void> disconnect();
   Future<void> subscribe(
@@ -40,11 +36,7 @@ class AWSIoTServiceImpl implements AWSIoTService {
   bool get isConnected => _currentState == MQTTConnectionState.connected;
 
   @override
-  Future<void> initialize(
-    String endpoint,
-    String certificatePath,
-    String privateKeyPath,
-  ) async {
+  Future<void> initialize(String endpoint) async {
     try {
       final clientId =
           'doorphone_viewer_${DateTime.now().millisecondsSinceEpoch}';

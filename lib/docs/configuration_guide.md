@@ -46,9 +46,11 @@ The configuration is stored locally on the device in encrypted shared preference
 ## Integration with AWS Services
 
 The stored configuration is automatically used by:
-- AWS IoT Service for MQTT connections
+- AWS IoT Service for MQTT connections (using access key authentication)
 - KVS WebRTC Service for video streaming
 - All other AWS-related functionality
+
+Note: This app uses AWS access key authentication instead of certificates for simplified setup.
 
 ## Troubleshooting
 

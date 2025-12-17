@@ -5,11 +5,7 @@ class AppConfig {
       'your-iot-endpoint.iot.us-east-1.amazonaws.com';
   static const String kvsRegion = 'us-east-1';
 
-  // Certificate paths (stored in assets/certificates/)
-  static const String certificatePath =
-      'assets/certificates/certificate.pem.crt';
-  static const String privateKeyPath = 'assets/certificates/private.pem.key';
-  static const String rootCAPath = 'assets/certificates/AmazonRootCA1.pem';
+  // AWS Authentication using access keys (no certificates needed)
 
   // MQTT Topics
   static const String deviceRegistryTopic = 'doorphone/devices/+/registry';

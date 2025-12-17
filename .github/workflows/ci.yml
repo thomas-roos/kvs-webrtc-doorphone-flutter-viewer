@@ -109,13 +109,7 @@ jobs:
         }
         EOF
         
-    - name: Create placeholder certificates
-      working-directory: .
-      run: |
-        mkdir -p assets/certificates
-        echo "# Placeholder certificate for CI build" > assets/certificates/certificate.pem.crt
-        echo "# Placeholder private key for CI build" > assets/certificates/private.pem.key
-        echo "# Placeholder root CA for CI build" > assets/certificates/AmazonRootCA1.pem
+
         
     - name: Build APK (Debug)
       working-directory: .

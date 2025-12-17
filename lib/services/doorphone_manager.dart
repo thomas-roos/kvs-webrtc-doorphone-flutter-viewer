@@ -8,7 +8,7 @@ import 'aws_iot_service.dart';
 import 'kvs_webrtc_service.dart';
 
 abstract class DoorphoneManager extends ChangeNotifier {
-  Future<void> initializeAWSIoT(String endpoint, String certificatePath);
+  Future<void> initializeAWSIoT(String endpoint);
   Stream<DoorphoneDevice> get devices;
   List<DoorphoneDevice> get deviceList;
   DoorphoneDevice? get activeDevice;
@@ -60,13 +60,9 @@ class DoorphoneManagerImpl extends DoorphoneManager {
   Stream<AccessEvent> get accessEvents => _accessEventsController.stream;
 
   @override
-  Future<void> initializeAWSIoT(String endpoint, String certificatePath) async {
+  Future<void> initializeAWSIoT(String endpoint) async {
     try {
-      await _awsIoTService.initialize(
-        endpoint,
-        certificatePath,
-        AppConfig.privateKeyPath,
-      );
+      await _awsIoTService.initialize(endpoint);
       
       await _awsIoTService.connect();
       

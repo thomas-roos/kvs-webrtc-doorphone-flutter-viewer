@@ -77,7 +77,7 @@ lib/
 └── main.dart           # App entry point
 
 android/                 # Android-specific code
-assets/                  # App assets and certificates
+assets/                  # App assets (images, icons)
 ```
 
 ## Services
@@ -89,7 +89,7 @@ assets/                  # App assets and certificates
 
 ## Security
 
-- All communications are encrypted using AWS IoT certificates
+- All communications are encrypted using AWS IoT with access key authentication
 - WebRTC connections use secure signaling channels
 - Device access is controlled through AWS IoT policies
 

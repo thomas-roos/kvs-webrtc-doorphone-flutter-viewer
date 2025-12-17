@@ -73,10 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
       final notificationService = context.read<NotificationService>();
 
       // Initialize AWS IoT connection with dynamic endpoint
-      await doorphoneManager.initializeAWSIoT(
-        awsConfig.iotEndpoint,
-        AppConfig.certificatePath,
-      );
+      await doorphoneManager.initializeAWSIoT(awsConfig.iotEndpoint);
 
       // Initialize notifications
       await notificationService.initialize();

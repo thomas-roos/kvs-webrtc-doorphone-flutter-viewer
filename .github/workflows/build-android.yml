@@ -137,10 +137,6 @@ jobs:
         EOF
         fi
       
-    - name: Create AWS certificates directory
-      working-directory: .
-      run: mkdir -p assets/certificates
-      
     # Configure Gradle for faster builds
     - name: Configure Gradle properties
       run: |
@@ -156,13 +152,6 @@ jobs:
         kotlin.incremental=true
         kotlin.incremental.android=true
         EOF
-      
-    - name: Create placeholder certificates (for build only)
-      working-directory: ./assets/certificates
-      run: |
-        echo "# Placeholder certificate for build" > certificate.pem.crt
-        echo "# Placeholder private key for build" > private.pem.key
-        echo "# Placeholder root CA for build" > AmazonRootCA1.pem
         
     # Cache Flutter build outputs
     - name: Cache Flutter build
@@ -287,7 +276,7 @@ jobs:
           - AWS IoT and KVS configuration
           
           ### 🔐 Security Note
-          This build uses placeholder certificates. For production use, configure your own AWS IoT certificates and Firebase configuration.
+          This build uses AWS access key authentication. Configure your AWS credentials in the app settings.
           
           ---
           
