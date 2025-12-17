@@ -4,18 +4,20 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import '../core/app_config.dart';
 
-enum MQTTConnectionState {
-  disconnected,
-  connecting,
-  connected,
-  error,
-}
+enum MQTTConnectionState { disconnected, connecting, connected, error }
 
 abstract class AWSIoTService {
-  Future<void> initialize(String endpoint, String certificatePath, String privateKeyPath);
+  Future<void> initialize(
+    String endpoint,
+    String certificatePath,
+    String privateKeyPath,
+  );
   Future<void> connect();
   Future<void> disconnect();
-  Future<void> subscribe(String topic, Function(String, Map<String, dynamic>) callback);
+  Future<void> subscribe(
+    String topic,
+    Function(String, Map<String, dynamic>) callback,
+  );
   Future<void> publish(String topic, Map<String, dynamic> message);
   Stream<MQTTConnectionState> get connectionState;
   bool get isConnected;
@@ -26,28 +28,34 @@ class AWSIoTServiceImpl implements AWSIoTService {
   final StreamController<MQTTConnectionState> _connectionStateController =
       StreamController<MQTTConnectionState>.broadcast();
   final Map<String, Function(String, Map<String, dynamic>)> _subscriptions = {};
-  
+
   MQTTConnectionState _currentState = MQTTConnectionState.disconnected;
   bool _isInitialized = false;
 
   @override
-  Stream<MQTTConnectionState> get connectionState => _connectionStateController.stream;
+  Stream<MQTTConnectionState> get connectionState =>
+      _connectionStateController.stream;
 
   @override
   bool get isConnected => _currentState == MQTTConnectionState.connected;
 
   @override
-  Future<void> initialize(String endpoint, String certificatePath, String privateKeyPath) async {
+  Future<void> initialize(
+    String endpoint,
+    String certificatePath,
+    String privateKeyPath,
+  ) async {
     try {
-      final clientId = 'doorphone_viewer_${DateTime.now().millisecondsSinceEpoch}';
+      final clientId =
+          'doorphone_viewer_${DateTime.now().millisecondsSinceEpoch}';
       _mqttClient = MqttServerClient(endpoint, clientId);
-      
+
       // Configure MQTT client
       _mqttClient.port = 8883; // AWS IoT MQTT port
       _mqttClient.secure = true;
       _mqttClient.keepAlivePeriod = 60;
       _mqttClient.connectTimeoutPeriod = 10000;
-      
+
       // Set up connection state listeners
       _mqttClient.onConnected = () {
         _updateConnectionState(MQTTConnectionState.connected);
@@ -64,7 +72,9 @@ class AWSIoTServiceImpl implements AWSIoTService {
       };
 
       // Set up message listener
-      _mqttClient.updates!.listen((List<MqttReceivedMessage<MqttMessage>> messages) {
+      _mqttClient.updates!.listen((
+        List<MqttReceivedMessage<MqttMessage>> messages,
+      ) {
         for (final message in messages) {
           final topic = message.topic;
           final payload = MqttPublishPayload.bytesToStringAsString(
@@ -91,18 +101,17 @@ class AWSIoTServiceImpl implements AWSIoTService {
 
     try {
       _updateConnectionState(MQTTConnectionState.connecting);
-      
+
       // For demo purposes, we'll simulate a connection
       // In a real implementation, you would set up AWS IoT certificates here
       print('AWS IoT MQTT: Attempting connection (simulated)');
-      
+
       // Simulate connection delay
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // For now, we'll just mark as connected for demo purposes
       _updateConnectionState(MQTTConnectionState.connected);
       print('AWS IoT MQTT: Connected (simulated)');
-      
     } catch (e) {
       print('AWS IoT MQTT: Connection failed - $e');
       _updateConnectionState(MQTTConnectionState.error);
@@ -121,7 +130,10 @@ class AWSIoTServiceImpl implements AWSIoTService {
   }
 
   @override
-  Future<void> subscribe(String topic, Function(String, Map<String, dynamic>) callback) async {
+  Future<void> subscribe(
+    String topic,
+    Function(String, Map<String, dynamic>) callback,
+  ) async {
     if (!isConnected) {
       throw Exception('Not connected to AWS IoT');
     }
@@ -160,7 +172,7 @@ class AWSIoTServiceImpl implements AWSIoTService {
   void _handleMessage(String topic, String message) {
     try {
       final Map<String, dynamic> jsonMessage = jsonDecode(message);
-      
+
       // Find matching subscription callback
       for (final subscription in _subscriptions.entries) {
         if (_topicMatches(subscription.key, topic)) {
@@ -179,9 +191,12 @@ class AWSIoTServiceImpl implements AWSIoTService {
 
     if (subscriptionParts.last == '#') {
       // Multi-level wildcard - check if prefix matches
-      final prefixParts = subscriptionParts.sublist(0, subscriptionParts.length - 1);
+      final prefixParts = subscriptionParts.sublist(
+        0,
+        subscriptionParts.length - 1,
+      );
       if (receivedParts.length < prefixParts.length) return false;
-      
+
       for (int i = 0; i < prefixParts.length; i++) {
         if (prefixParts[i] != '+' && prefixParts[i] != receivedParts[i]) {
           return false;
@@ -193,7 +208,8 @@ class AWSIoTServiceImpl implements AWSIoTService {
     if (subscriptionParts.length != receivedParts.length) return false;
 
     for (int i = 0; i < subscriptionParts.length; i++) {
-      if (subscriptionParts[i] != '+' && subscriptionParts[i] != receivedParts[i]) {
+      if (subscriptionParts[i] != '+' &&
+          subscriptionParts[i] != receivedParts[i]) {
         return false;
       }
     }
@@ -205,9 +221,9 @@ class AWSIoTServiceImpl implements AWSIoTService {
     while (attempts < AppConfig.maxReconnectionAttempts && !isConnected) {
       attempts++;
       print('AWS IoT MQTT: Reconnection attempt $attempts');
-      
+
       await Future.delayed(AppConfig.reconnectionDelay);
-      
+
       try {
         await connect();
         break;

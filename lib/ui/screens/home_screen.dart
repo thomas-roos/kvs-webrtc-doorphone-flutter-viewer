@@ -20,7 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  
+
   @override
   void initState() {
     super.initState();
@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _setupNotificationListener() {
     final notificationService = context.read<NotificationService>();
-    
+
     notificationService.notificationStream.listen((message) {
       if (message.data['type'] == 'doorbell') {
         _handleDoorbellNotification(message.data);
@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final device = doorphoneManager.deviceList
         .where((d) => d.id == deviceId)
         .firstOrNull;
-    
+
     if (device == null) return;
 
     showDialog(
@@ -59,10 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(
-              Icons.doorbell,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            Icon(Icons.doorbell, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
             const Text('Doorbell Ring'),
           ],
@@ -115,9 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -136,28 +133,15 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: const [
-          _HomeTab(),
-          _DevicesTab(),
-          _HistoryTab(),
-        ],
+        children: const [_HomeTab(), _DevicesTab(), _HistoryTab()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.devices),
-            label: 'Devices',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.devices), label: 'Devices'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
         ],
       ),
     );
@@ -239,14 +223,19 @@ class _HomeTab extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  ...devices.take(3).map((device) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: DeviceCard(
-                      device: device,
-                      isActive: device.id == activeDevice?.id,
-                      onTap: () => _navigateToVideoViewer(context, device),
-                    ),
-                  )),
+                  ...devices
+                      .take(3)
+                      .map(
+                        (device) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: DeviceCard(
+                            device: device,
+                            isActive: device.id == activeDevice?.id,
+                            onTap: () =>
+                                _navigateToVideoViewer(context, device),
+                          ),
+                        ),
+                      ),
                 ] else ...[
                   // No Devices State
                   Center(
@@ -260,17 +249,19 @@ class _HomeTab extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           'No devices found',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Make sure your doorphone devices are connected to AWS IoT',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
                         ),
                       ],
                     ),

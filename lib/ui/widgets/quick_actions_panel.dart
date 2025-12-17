@@ -15,7 +15,9 @@ class QuickActionsPanel extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -23,12 +25,12 @@ class QuickActionsPanel extends StatelessWidget {
             children: [
               Text(
                 'Quick Actions',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              
+
               if (!hasDevices) ...[
                 _buildDisabledAction(
                   context,
@@ -150,11 +152,7 @@ class QuickActionsPanel extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: Theme.of(context).colorScheme.outline,
-            size: 32,
-          ),
+          Icon(icon, color: Theme.of(context).colorScheme.outline, size: 32),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -186,7 +184,7 @@ class QuickActionsPanel extends StatelessWidget {
     try {
       final doorphoneManager = context.read<DoorphoneManager>();
       await doorphoneManager.unlockDoor(deviceId);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -211,7 +209,7 @@ class QuickActionsPanel extends StatelessWidget {
     try {
       final doorphoneManager = context.read<DoorphoneManager>();
       await doorphoneManager.lockDoor(deviceId);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

@@ -94,9 +94,7 @@ class EventHistoryScreen extends StatelessWidget {
             Text(_formatTimestamp(event.timestamp)),
           ],
         ),
-        trailing: event.visitorImage != null
-            ? const Icon(Icons.photo)
-            : null,
+        trailing: event.visitorImage != null ? const Icon(Icons.photo) : null,
         onTap: () {
           _showEventDetails(context, event);
         },
@@ -172,8 +170,7 @@ class EventHistoryScreen extends StatelessWidget {
             Text('Timestamp: ${event.timestamp}'),
             if (event.callDuration != null)
               Text('Duration: ${event.callDuration}'),
-            if (event.metadata != null)
-              Text('Metadata: ${event.metadata}'),
+            if (event.metadata != null) Text('Metadata: ${event.metadata}'),
           ],
         ),
         actions: [

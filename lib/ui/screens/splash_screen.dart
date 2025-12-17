@@ -30,21 +30,13 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
 
     _animationController.forward();
   }
@@ -73,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
       }
     } catch (e) {
       print('SplashScreen: Initialization failed - $e');
-      
+
       // Show error dialog
       if (mounted) {
         _showErrorDialog(e.toString());
@@ -95,9 +87,9 @@ class _SplashScreenState extends State<SplashScreen>
             const SizedBox(height: 8),
             Text(
               error,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontFamily: 'monospace',
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
             ),
           ],
         ),
@@ -163,30 +155,33 @@ class _SplashScreenState extends State<SplashScreen>
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // App Title
                     Text(
                       'Doorphone Viewer',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Subtitle
                     Text(
                       'Secure doorphone monitoring',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.8),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary.withOpacity(0.8),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 48),
-                    
+
                     // Loading Indicator
                     SizedBox(
                       width: 40,
@@ -198,14 +193,16 @@ class _SplashScreenState extends State<SplashScreen>
                         strokeWidth: 3,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Loading Text
                     Text(
                       'Connecting to AWS services...',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary.withOpacity(0.7),
                       ),
                     ),
                   ],

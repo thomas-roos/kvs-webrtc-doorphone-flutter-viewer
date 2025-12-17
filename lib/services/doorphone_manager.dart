@@ -26,7 +26,7 @@ abstract class DoorphoneManager extends ChangeNotifier {
 class DoorphoneManagerImpl extends DoorphoneManager {
   final AWSIoTService _awsIoTService;
   final KVSWebRTCService _kvsWebRTCService;
-  
+
   final StreamController<DoorphoneDevice> _devicesController =
       StreamController<DoorphoneDevice>.broadcast();
   final StreamController<DoorbellEvent> _doorbellEventsController =
@@ -68,12 +68,12 @@ class DoorphoneManagerImpl extends DoorphoneManager {
         certificatePath,
         AppConfig.privateKeyPath,
       );
-      
+
       await _awsIoTService.connect();
-      
+
       // Subscribe to device registry and events
       await _subscribeToDeviceTopics();
-      
+
       _isInitialized = true;
       print('DoorphoneManager: AWS IoT initialized');
     } catch (e) {
@@ -91,24 +91,29 @@ class DoorphoneManagerImpl extends DoorphoneManager {
 
     try {
       // Initialize KVS WebRTC for this device
-      await _kvsWebRTCService.initialize(device.kvsChannelName, device.awsRegion);
+      await _kvsWebRTCService.initialize(
+        device.kvsChannelName,
+        device.awsRegion,
+      );
       await _kvsWebRTCService.connectAsViewer(device.kvsChannelName);
-      
+
       // Update device status
       final updatedDevice = device.copyWith(status: DeviceStatus.connecting);
       _updateDevice(updatedDevice);
-      
+
       // Set as active device
       _activeDevice = updatedDevice;
-      
+
       // Subscribe to device-specific MQTT topics
       await _subscribeToDeviceSpecificTopics(deviceId);
-      
+
       // Update status to online after successful connection
-      final connectedDevice = updatedDevice.copyWith(status: DeviceStatus.online);
+      final connectedDevice = updatedDevice.copyWith(
+        status: DeviceStatus.online,
+      );
       _updateDevice(connectedDevice);
       _activeDevice = connectedDevice;
-      
+
       notifyListeners();
       print('DoorphoneManager: Connected to device $deviceId');
     } catch (e) {
@@ -123,19 +128,21 @@ class DoorphoneManagerImpl extends DoorphoneManager {
   Future<void> disconnectFromDevice(String deviceId) async {
     try {
       await _kvsWebRTCService.disconnect();
-      
+
       final device = _devices.firstWhere((d) => d.id == deviceId);
       final disconnectedDevice = device.copyWith(status: DeviceStatus.offline);
       _updateDevice(disconnectedDevice);
-      
+
       if (_activeDevice?.id == deviceId) {
         _activeDevice = null;
       }
-      
+
       notifyListeners();
       print('DoorphoneManager: Disconnected from device $deviceId');
     } catch (e) {
-      print('DoorphoneManager: Failed to disconnect from device $deviceId - $e');
+      print(
+        'DoorphoneManager: Failed to disconnect from device $deviceId - $e',
+      );
     }
   }
 
@@ -154,7 +161,10 @@ class DoorphoneManagerImpl extends DoorphoneManager {
   }
 
   @override
-  Future<void> publishMQTTMessage(String topic, Map<String, dynamic> message) async {
+  Future<void> publishMQTTMessage(
+    String topic,
+    Map<String, dynamic> message,
+  ) async {
     if (!_awsIoTService.isConnected) {
       throw Exception('AWS IoT not connected');
     }
@@ -166,7 +176,7 @@ class DoorphoneManagerImpl extends DoorphoneManager {
   Future<void> unlockDoor(String deviceId) async {
     final device = _devices.firstWhere((d) => d.id == deviceId);
     final commandTopic = '${device.mqttTopic}/commands';
-    
+
     final command = {
       'action': 'unlock',
       'deviceId': deviceId,
@@ -182,7 +192,7 @@ class DoorphoneManagerImpl extends DoorphoneManager {
   Future<void> lockDoor(String deviceId) async {
     final device = _devices.firstWhere((d) => d.id == deviceId);
     final commandTopic = '${device.mqttTopic}/commands';
-    
+
     final command = {
       'action': 'lock',
       'deviceId': deviceId,
@@ -197,17 +207,17 @@ class DoorphoneManagerImpl extends DoorphoneManager {
   Future<void> _subscribeToDeviceTopics() async {
     // Subscribe to device registry updates
     await subscribeToMQTTTopic(AppConfig.deviceRegistryTopic);
-    
+
     // Subscribe to general device events
     await subscribeToMQTTTopic(AppConfig.deviceEventsTopic);
-    
+
     // Subscribe to doorbell events
     await subscribeToMQTTTopic(AppConfig.doorbellEventsTopic);
   }
 
   Future<void> _subscribeToDeviceSpecificTopics(String deviceId) async {
     final device = _devices.firstWhere((d) => d.id == deviceId);
-    
+
     // Subscribe to device-specific events
     await subscribeToMQTTTopic('${device.mqttTopic}/events');
     await subscribeToMQTTTopic('${device.mqttTopic}/doorbell');
@@ -244,7 +254,9 @@ class DoorphoneManagerImpl extends DoorphoneManager {
       final event = DoorbellEvent.fromJson(message);
       _eventHistory.add(event);
       _doorbellEventsController.add(event);
-      print('DoorphoneManager: Doorbell event received for device ${event.deviceId}');
+      print(
+        'DoorphoneManager: Doorbell event received for device ${event.deviceId}',
+      );
     } catch (e) {
       print('DoorphoneManager: Failed to parse doorbell message - $e');
     }
@@ -254,7 +266,9 @@ class DoorphoneManagerImpl extends DoorphoneManager {
     try {
       final event = AccessEvent.fromJson(message);
       _accessEventsController.add(event);
-      print('DoorphoneManager: Access event received for device ${event.deviceId}');
+      print(
+        'DoorphoneManager: Access event received for device ${event.deviceId}',
+      );
     } catch (e) {
       print('DoorphoneManager: Failed to parse access message - $e');
     }
@@ -275,13 +289,13 @@ class DoorphoneManagerImpl extends DoorphoneManager {
 
   void _addOrUpdateDevice(DoorphoneDevice device) {
     final existingIndex = _devices.indexWhere((d) => d.id == device.id);
-    
+
     if (existingIndex >= 0) {
       _devices[existingIndex] = device;
     } else {
       _devices.add(device);
     }
-    
+
     _devicesController.add(device);
     notifyListeners();
   }

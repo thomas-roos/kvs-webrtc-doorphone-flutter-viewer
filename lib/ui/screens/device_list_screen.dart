@@ -30,18 +30,11 @@ class DeviceListScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.devices_other,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
+                  Icon(Icons.devices_other, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
                     'No devices found',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                 ],
               ),

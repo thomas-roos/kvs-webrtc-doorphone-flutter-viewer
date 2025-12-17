@@ -22,12 +22,12 @@ class NotificationServiceImpl implements NotificationService {
   late StreamSubscription<DoorbellEvent> _doorbellSubscription;
   bool _isInitialized = false;
 
-  NotificationServiceImpl({
-    required DoorphoneManager doorphoneManager,
-  }) : _doorphoneManager = doorphoneManager;
+  NotificationServiceImpl({required DoorphoneManager doorphoneManager})
+    : _doorphoneManager = doorphoneManager;
 
   @override
-  Stream<RemoteMessage> get notificationStream => _notificationController.stream;
+  Stream<RemoteMessage> get notificationStream =>
+      _notificationController.stream;
 
   @override
   Future<void> initialize() async {
@@ -66,7 +66,8 @@ class NotificationServiceImpl implements NotificationService {
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         print('NotificationService: Permissions granted');
-      } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+      } else if (settings.authorizationStatus ==
+          AuthorizationStatus.provisional) {
         print('NotificationService: Provisional permissions granted');
       } else {
         print('NotificationService: Permissions denied');
@@ -101,9 +102,9 @@ class NotificationServiceImpl implements NotificationService {
       final device = _doorphoneManager.deviceList
           .where((d) => d.id == event.deviceId)
           .firstOrNull;
-      
+
       final deviceName = device?.name ?? 'Unknown Device';
-      
+
       // Create notification data
       final notificationData = {
         'title': 'Doorbell Ring',
@@ -117,7 +118,7 @@ class NotificationServiceImpl implements NotificationService {
       // For local notifications, we would use a local notification plugin
       // For now, we'll just log and emit the event
       print('NotificationService: Doorbell notification for ${event.deviceId}');
-      
+
       // Create a RemoteMessage-like object for consistency
       final message = RemoteMessage(
         messageId: event.id,
@@ -128,7 +129,7 @@ class NotificationServiceImpl implements NotificationService {
         ),
         sentTime: event.timestamp,
       );
-      
+
       _notificationController.add(message);
     } catch (e) {
       print('NotificationService: Failed to show doorbell notification - $e');
@@ -164,7 +165,7 @@ class NotificationServiceImpl implements NotificationService {
 
   void _handleForegroundMessage(RemoteMessage message) {
     _notificationController.add(message);
-    
+
     // Handle doorphone-specific messages
     final messageType = message.data['type'];
     if (messageType == 'doorbell') {
@@ -176,7 +177,7 @@ class NotificationServiceImpl implements NotificationService {
 
   void _handleBackgroundMessage(RemoteMessage message) {
     _notificationController.add(message);
-    
+
     // Navigate to appropriate screen based on message type
     final messageType = message.data['type'];
     if (messageType == 'doorbell') {
@@ -187,7 +188,7 @@ class NotificationServiceImpl implements NotificationService {
 
   void _handleTerminatedMessage(RemoteMessage message) {
     _notificationController.add(message);
-    
+
     // Handle app launch from notification
     final messageType = message.data['type'];
     if (messageType == 'doorbell') {
@@ -199,14 +200,13 @@ class NotificationServiceImpl implements NotificationService {
     try {
       final deviceId = message.data['deviceId'];
       final eventId = message.data['eventId'];
-      
+
       print('NotificationService: Doorbell message for device $deviceId');
-      
+
       // You could trigger additional actions here, such as:
       // - Auto-connecting to the device
       // - Showing an in-app notification
       // - Playing a custom sound
-      
     } catch (e) {
       print('NotificationService: Failed to handle doorbell message - $e');
     }
@@ -216,8 +216,10 @@ class NotificationServiceImpl implements NotificationService {
     try {
       final deviceId = message.data['deviceId'];
       final action = message.data['action'];
-      
-      print('NotificationService: Access message for device $deviceId - $action');
+
+      print(
+        'NotificationService: Access message for device $deviceId - $action',
+      );
     } catch (e) {
       print('NotificationService: Failed to handle access message - $e');
     }

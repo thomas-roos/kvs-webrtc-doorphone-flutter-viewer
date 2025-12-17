@@ -7,10 +7,7 @@ import '../../services/kvs_webrtc_service.dart';
 class VideoViewerScreen extends StatefulWidget {
   final DoorphoneDevice device;
 
-  const VideoViewerScreen({
-    super.key,
-    required this.device,
-  });
+  const VideoViewerScreen({super.key, required this.device});
 
   @override
   State<VideoViewerScreen> createState() => _VideoViewerScreenState();
@@ -33,7 +30,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
     try {
       final doorphoneManager = context.read<DoorphoneManager>();
       await doorphoneManager.connectToDevice(widget.device.id);
-      
+
       setState(() {
         _isConnecting = false;
         _isConnected = true;
@@ -71,19 +68,13 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
@@ -106,7 +97,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
               child: _buildVideoDisplay(),
             ),
           ),
-          
+
           // Control Panel
           Container(
             padding: const EdgeInsets.all(16),
@@ -140,11 +131,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.videocam_off,
-              size: 64,
-              color: Colors.white54,
-            ),
+            const Icon(Icons.videocam_off, size: 64, color: Colors.white54),
             const SizedBox(height: 16),
             const Text(
               'Video stream not available',
@@ -175,26 +162,16 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.videocam,
-              size: 64,
-              color: Colors.white54,
-            ),
+            Icon(Icons.videocam, size: 64, color: Colors.white54),
             SizedBox(height: 16),
             Text(
               'Video Stream Active',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 18),
             ),
             SizedBox(height: 8),
             Text(
               'WebRTC connection established',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.white54, fontSize: 14),
             ),
           ],
         ),
@@ -229,9 +206,9 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
             ),
           ],
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Device Info
         Container(
           padding: const EdgeInsets.all(12),
@@ -241,19 +218,12 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                color: Colors.white54,
-                size: 16,
-              ),
+              Icon(Icons.info_outline, color: Colors.white54, size: 16),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Connected to ${widget.device.name} (${widget.device.ipAddress})',
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ),
               Container(
@@ -294,13 +264,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-          ),
-        ),
+        Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
       ],
     );
   }

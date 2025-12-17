@@ -20,13 +20,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   await Firebase.initializeApp();
-  
+
   // Set up background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  
+
   runApp(const DoorphoneViewerApp());
 }
 
@@ -37,15 +37,9 @@ class DoorphoneViewerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AppConfig>(
-          create: (_) => AppConfig(),
-        ),
-        Provider<AWSIoTService>(
-          create: (_) => AWSIoTServiceImpl(),
-        ),
-        Provider<KVSWebRTCService>(
-          create: (_) => KVSWebRTCServiceImpl(),
-        ),
+        Provider<AppConfig>(create: (_) => AppConfig()),
+        Provider<AWSIoTService>(create: (_) => AWSIoTServiceImpl()),
+        Provider<KVSWebRTCService>(create: (_) => KVSWebRTCServiceImpl()),
         ChangeNotifierProvider<DoorphoneManager>(
           create: (context) => DoorphoneManagerImpl(
             awsIoTService: context.read<AWSIoTService>(),
@@ -64,9 +58,7 @@ class DoorphoneViewerApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
         home: const SplashScreen(),
-        routes: {
-          '/home': (context) => const HomeScreen(),
-        },
+        routes: {'/home': (context) => const HomeScreen()},
         debugShowCheckedModeBanner: false,
       ),
     );

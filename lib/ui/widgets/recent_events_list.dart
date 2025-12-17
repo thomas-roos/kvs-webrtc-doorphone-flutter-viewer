@@ -29,7 +29,9 @@ class RecentEventsList extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceVariant.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -87,9 +89,9 @@ class RecentEventsList extends StatelessWidget {
               size: 20,
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +112,7 @@ class RecentEventsList extends StatelessWidget {
               ],
             ),
           ),
-          
+
           Text(
             _formatTimestamp(event.timestamp),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(

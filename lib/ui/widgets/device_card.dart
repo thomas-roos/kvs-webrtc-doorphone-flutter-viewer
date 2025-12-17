@@ -53,9 +53,9 @@ class DeviceCard extends StatelessWidget {
                       size: 24,
                     ),
                   ),
-                  
+
                   const SizedBox(width: 12),
-                  
+
                   // Device Info
                   Expanded(
                     child: Column(
@@ -63,21 +63,21 @@ class DeviceCard extends StatelessWidget {
                       children: [
                         Text(
                           device.name,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           device.ipAddress,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   // Status Indicator
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -102,19 +102,20 @@ class DeviceCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           _getStatusText(),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: _getStatusColor(context),
-                            fontWeight: FontWeight.medium,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: _getStatusColor(context),
+                                fontWeight: FontWeight.medium,
+                              ),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Device Details
               Row(
                 children: [
@@ -136,7 +137,7 @@ class DeviceCard extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               if (device.capabilities.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Wrap(
@@ -147,20 +148,24 @@ class DeviceCard extends StatelessWidget {
                         capability,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceVariant,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     );
                   }).toList(),
                 ),
               ],
-              
+
               if (isActive) ...[
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -198,11 +203,7 @@ class DeviceCard extends StatelessWidget {
   ) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Theme.of(context).colorScheme.outline,
-        ),
+        Icon(icon, size: 16, color: Theme.of(context).colorScheme.outline),
         const SizedBox(width: 4),
         Expanded(
           child: Column(
@@ -216,9 +217,9 @@ class DeviceCard extends StatelessWidget {
               ),
               Text(
                 value,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.medium,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.medium),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -257,7 +258,7 @@ class DeviceCard extends StatelessWidget {
   String _formatLastSeen() {
     final now = DateTime.now();
     final difference = now.difference(device.lastSeen);
-    
+
     if (difference.inMinutes < 1) {
       return 'Just now';
     } else if (difference.inHours < 1) {
