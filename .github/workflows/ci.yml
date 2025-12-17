@@ -23,25 +23,25 @@ jobs:
         cache: true
         
     - name: Get Flutter dependencies
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter pub get
       
     - name: Verify Flutter formatting
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: dart format --output=none --set-exit-if-changed .
       
     - name: Analyze Flutter code
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter analyze
       
     - name: Run Flutter tests
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter test --coverage
       
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        file: ./flutter-viewer/coverage/lcov.info
+        file: ./coverage/lcov.info
         flags: flutter
         name: flutter-coverage
         fail_ci_if_error: false
@@ -69,11 +69,11 @@ jobs:
         cache: true
         
     - name: Get Flutter dependencies
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter pub get
       
     - name: Create placeholder google-services.json
-      working-directory: ./flutter-viewer/android/app
+      working-directory: ./android/app
       run: |
         cat > google-services.json << 'EOF'
         {
@@ -107,7 +107,7 @@ jobs:
         EOF
         
     - name: Create placeholder certificates
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         mkdir -p assets/certificates
         echo "# Placeholder certificate for CI build" > assets/certificates/certificate.pem.crt
@@ -115,11 +115,11 @@ jobs:
         echo "# Placeholder root CA for CI build" > assets/certificates/AmazonRootCA1.pem
         
     - name: Build APK (Debug)
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter build apk --debug
       
     - name: Verify APK was created
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
           echo "✅ Debug APK built successfully"
@@ -139,7 +139,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Check for common security issues
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         echo "🔍 Running basic security checks..."
         
@@ -179,15 +179,15 @@ jobs:
         cache: true
         
     - name: Get Flutter dependencies
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter pub get
       
     - name: Check for outdated dependencies
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter pub outdated
       
     - name: Audit dependencies for security issues
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         # Check for known security vulnerabilities in dependencies
         flutter pub deps --json > deps.json

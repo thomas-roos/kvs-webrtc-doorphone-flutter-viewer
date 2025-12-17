@@ -28,7 +28,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       with:
         scan-type: 'fs'
-        scan-ref: './flutter-viewer'
+        scan-ref: '.'
         format: 'sarif'
         output: 'trivy-results.sarif'
         severity: 'CRITICAL,HIGH,MEDIUM'
@@ -57,11 +57,11 @@ jobs:
         cache: true
         
     - name: Get Flutter dependencies
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter pub get
       
     - name: Check for known vulnerabilities in dependencies
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         echo "🔍 Checking Flutter dependencies for known vulnerabilities..."
         
@@ -97,7 +97,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Check Android security configurations
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         echo "🔍 Checking Android security configurations..."
         
@@ -159,7 +159,7 @@ jobs:
     - name: Run TruffleHog OSS
       uses: trufflesecurity/trufflehog@main
       with:
-        path: ./flutter-viewer
+        path: .
         base: main
         head: HEAD
         extra_args: --debug --only-verified

@@ -38,7 +38,7 @@ jobs:
         
     - name: Get current version
       id: current_version
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         CURRENT_VERSION=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
         BUILD_NUMBER=$(grep '^version:' pubspec.yaml | cut -d '+' -f 2)
@@ -80,12 +80,12 @@ jobs:
         echo "new_build_number=$NEW_BUILD_NUMBER" >> $GITHUB_OUTPUT
         
     - name: Update pubspec.yaml version
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         sed -i "s/^version: .*/version: ${{ steps.new_version.outputs.new_full_version }}/" pubspec.yaml
         
     - name: Update version in app_config.dart
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         if [ -f "lib/core/app_config.dart" ]; then
           sed -i "s/static const String appVersion = .*/static const String appVersion = '${{ steps.new_version.outputs.new_version }}';/" lib/core/app_config.dart
@@ -112,9 +112,9 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add flutter-viewer/pubspec.yaml
-        if [ -f "flutter-viewer/lib/core/app_config.dart" ]; then
-          git add flutter-viewer/lib/core/app_config.dart
+        git add pubspec.yaml
+        if [ -f "lib/core/app_config.dart" ]; then
+          git add lib/core/app_config.dart
         fi
         git commit -m "chore: bump version to ${{ steps.new_version.outputs.new_version }}"
         git push

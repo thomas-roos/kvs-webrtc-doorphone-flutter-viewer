@@ -31,47 +31,47 @@ jobs:
         cache: true
         
     - name: Get Flutter dependencies
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter pub get
       
     - name: Run Flutter analyzer
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter analyze
       
     - name: Run Flutter tests
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter test
       
     - name: Create google-services.json from secret
-      working-directory: ./flutter-viewer/android/app
+      working-directory: ./android/app
       run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > google-services.json
       
     - name: Create AWS certificates directory
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: mkdir -p assets/certificates
       
     - name: Create placeholder certificates (for build only)
-      working-directory: ./flutter-viewer/assets/certificates
+      working-directory: ./assets/certificates
       run: |
         echo "# Placeholder certificate for build" > certificate.pem.crt
         echo "# Placeholder private key for build" > private.pem.key
         echo "# Placeholder root CA for build" > AmazonRootCA1.pem
         
     - name: Build APK (Debug)
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter build apk --debug
       
     - name: Build APK (Release)
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter build apk --release
       
     - name: Build App Bundle (Release)
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: flutter build appbundle --release
       
     - name: Get version from pubspec.yaml
       id: version
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         VERSION=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
         BUILD_NUMBER=$(grep '^version:' pubspec.yaml | cut -d '+' -f 2)
@@ -80,7 +80,7 @@ jobs:
         echo "full_version=$VERSION+$BUILD_NUMBER" >> $GITHUB_OUTPUT
         
     - name: Rename APK files
-      working-directory: ./flutter-viewer
+      working-directory: .
       run: |
         mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/doorphone-viewer-debug-${{ steps.version.outputs.full_version }}.apk
         mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.apk
@@ -90,19 +90,19 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: doorphone-viewer-debug-apk
-        path: flutter-viewer/build/app/outputs/flutter-apk/doorphone-viewer-debug-${{ steps.version.outputs.full_version }}.apk
+        path: build/app/outputs/flutter-apk/doorphone-viewer-debug-${{ steps.version.outputs.full_version }}.apk
         
     - name: Upload Release APK as artifact
       uses: actions/upload-artifact@v3
       with:
         name: doorphone-viewer-release-apk
-        path: flutter-viewer/build/app/outputs/flutter-apk/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.apk
+        path: build/app/outputs/flutter-apk/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.apk
         
     - name: Upload App Bundle as artifact
       uses: actions/upload-artifact@v3
       with:
         name: doorphone-viewer-release-aab
-        path: flutter-viewer/build/app/outputs/bundle/release/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.aab
+        path: build/app/outputs/bundle/release/doorphone-viewer-release-${{ steps.version.outputs.full_version }}.aab
 
   release:
     needs: build
