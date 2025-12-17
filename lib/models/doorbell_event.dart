@@ -1,8 +1,4 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'doorbell_event.g.dart';
-
-@JsonSerializable()
+// JSON serialization removed for demo simplicity
 class DoorbellEvent {
   final String id;
   final String deviceId;
@@ -22,10 +18,30 @@ class DoorbellEvent {
     this.metadata,
   });
 
-  factory DoorbellEvent.fromJson(Map<String, dynamic> json) =>
-      _$DoorbellEventFromJson(json);
+  // JSON serialization methods removed for demo simplicity
+  factory DoorbellEvent.fromJson(Map<String, dynamic> json) {
+    return DoorbellEvent(
+      id: json['id'] as String,
+      deviceId: json['deviceId'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      type: EventType.values.firstWhere((e) => e.toString().split('.').last == json['type']),
+      visitorImage: json['visitorImage'] as String?,
+      callDuration: json['callDuration'] != null ? Duration(seconds: json['callDuration'] as int) : null,
+      metadata: json['metadata'] as Map<String, dynamic>?,
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$DoorbellEventToJson(this);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'deviceId': deviceId,
+      'timestamp': timestamp.toIso8601String(),
+      'type': type.toString().split('.').last,
+      'visitorImage': visitorImage,
+      'callDuration': callDuration?.inSeconds,
+      'metadata': metadata,
+    };
+  }
 
   DoorbellEvent copyWith({
     String? id,
@@ -64,12 +80,8 @@ class DoorbellEvent {
 }
 
 enum EventType {
-  @JsonValue('doorbell')
   doorbell,
-  @JsonValue('motion')
   motion,
-  @JsonValue('access')
   access,
-  @JsonValue('call')
   call,
 }

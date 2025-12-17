@@ -105,7 +105,7 @@ class DeviceCard extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: _getStatusColor(context),
-                                fontWeight: FontWeight.medium,
+                                fontWeight: FontWeight.w500,
                               ),
                         ),
                       ],
@@ -181,7 +181,7 @@ class DeviceCard extends StatelessWidget {
                         'Active Device',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.medium,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -219,7 +219,7 @@ class DeviceCard extends StatelessWidget {
                 value,
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.medium),
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
                 overflow: TextOverflow.ellipsis,
               ),
             ],

@@ -1,8 +1,4 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'user_permission.g.dart';
-
-@JsonSerializable()
+// JSON serialization removed for demo simplicity
 class UserPermission {
   final String userId;
   final String deviceId;
@@ -20,10 +16,28 @@ class UserPermission {
     required this.createdBy,
   });
 
-  factory UserPermission.fromJson(Map<String, dynamic> json) =>
-      _$UserPermissionFromJson(json);
+  // JSON serialization methods removed for demo simplicity
+  factory UserPermission.fromJson(Map<String, dynamic> json) {
+    return UserPermission(
+      userId: json['userId'] as String,
+      deviceId: json['deviceId'] as String,
+      permissions: (json['permissions'] as List).map((e) => Permission.values.firstWhere((p) => p.toString().split('.').last == e)).toList(),
+      expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt'] as String) : null,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdBy: json['createdBy'] as String,
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$UserPermissionToJson(this);
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'deviceId': deviceId,
+      'permissions': permissions.map((e) => e.toString().split('.').last).toList(),
+      'expiresAt': expiresAt?.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'createdBy': createdBy,
+    };
+  }
 
   bool hasPermission(Permission permission) {
     return permissions.contains(permission);
@@ -70,12 +84,8 @@ class UserPermission {
 }
 
 enum Permission {
-  @JsonValue('view')
   view,
-  @JsonValue('unlock')
   unlock,
-  @JsonValue('manage')
   manage,
-  @JsonValue('admin')
   admin,
 }

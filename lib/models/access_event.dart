@@ -1,8 +1,4 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'access_event.g.dart';
-
-@JsonSerializable()
+// JSON serialization removed for demo simplicity
 class AccessEvent {
   final String id;
   final String deviceId;
@@ -22,10 +18,30 @@ class AccessEvent {
     this.reason,
   });
 
-  factory AccessEvent.fromJson(Map<String, dynamic> json) =>
-      _$AccessEventFromJson(json);
+  // JSON serialization methods removed for demo simplicity
+  factory AccessEvent.fromJson(Map<String, dynamic> json) {
+    return AccessEvent(
+      id: json['id'] as String,
+      deviceId: json['deviceId'] as String,
+      userId: json['userId'] as String,
+      action: AccessAction.values.firstWhere((e) => e.toString().split('.').last == json['action']),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      success: json['success'] as bool,
+      reason: json['reason'] as String?,
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$AccessEventToJson(this);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'deviceId': deviceId,
+      'userId': userId,
+      'action': action.toString().split('.').last,
+      'timestamp': timestamp.toIso8601String(),
+      'success': success,
+      'reason': reason,
+    };
+  }
 
   AccessEvent copyWith({
     String? id,
@@ -64,10 +80,7 @@ class AccessEvent {
 }
 
 enum AccessAction {
-  @JsonValue('unlock')
   unlock,
-  @JsonValue('lock')
   lock,
-  @JsonValue('deny')
   deny,
 }

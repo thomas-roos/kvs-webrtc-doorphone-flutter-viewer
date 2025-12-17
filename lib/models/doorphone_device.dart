@@ -1,8 +1,4 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'doorphone_device.g.dart';
-
-@JsonSerializable()
+// JSON serialization removed for demo simplicity
 class DoorphoneDevice {
   final String id;
   final String name;
@@ -26,10 +22,34 @@ class DoorphoneDevice {
     required this.lastSeen,
   });
 
-  factory DoorphoneDevice.fromJson(Map<String, dynamic> json) =>
-      _$DoorphoneDeviceFromJson(json);
+  // JSON serialization methods removed for demo simplicity
+  factory DoorphoneDevice.fromJson(Map<String, dynamic> json) {
+    return DoorphoneDevice(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      ipAddress: json['ipAddress'] as String,
+      kvsChannelName: json['kvsChannelName'] as String,
+      mqttTopic: json['mqttTopic'] as String,
+      awsRegion: json['awsRegion'] as String,
+      status: DeviceStatus.values.firstWhere((e) => e.toString().split('.').last == json['status']),
+      capabilities: List<String>.from(json['capabilities'] as List),
+      lastSeen: DateTime.parse(json['lastSeen'] as String),
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$DoorphoneDeviceToJson(this);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'ipAddress': ipAddress,
+      'kvsChannelName': kvsChannelName,
+      'mqttTopic': mqttTopic,
+      'awsRegion': awsRegion,
+      'status': status.toString().split('.').last,
+      'capabilities': capabilities,
+      'lastSeen': lastSeen.toIso8601String(),
+    };
+  }
 
   DoorphoneDevice copyWith({
     String? id,
@@ -72,12 +92,8 @@ class DoorphoneDevice {
 }
 
 enum DeviceStatus {
-  @JsonValue('online')
   online,
-  @JsonValue('offline')
   offline,
-  @JsonValue('connecting')
   connecting,
-  @JsonValue('error')
   error,
 }

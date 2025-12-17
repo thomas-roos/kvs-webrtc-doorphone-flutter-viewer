@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import '../models/doorbell_event.dart';
-import '../core/app_config.dart';
 import 'doorphone_manager.dart';
 
 abstract class NotificationService {
@@ -199,7 +197,6 @@ class NotificationServiceImpl implements NotificationService {
   void _handleDoorbellMessage(RemoteMessage message) {
     try {
       final deviceId = message.data['deviceId'];
-      final eventId = message.data['eventId'];
 
       print('NotificationService: Doorbell message for device $deviceId');
 

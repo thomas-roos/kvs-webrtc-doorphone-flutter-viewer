@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../services/doorphone_manager.dart';
 import '../../services/notification_service.dart';
 import '../../models/doorphone_device.dart';
-import '../../models/doorbell_event.dart';
+
 import '../widgets/device_card.dart';
 import '../widgets/recent_events_list.dart';
 import '../widgets/quick_actions_panel.dart';

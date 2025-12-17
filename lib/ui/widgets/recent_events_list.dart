@@ -99,7 +99,7 @@ class RecentEventsList extends StatelessWidget {
                 Text(
                   _getEventTitle(event.type),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.medium,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
