@@ -3,10 +3,12 @@ import 'package:flutter/foundation.dart';
 import '../models/doorphone_device.dart';
 import '../models/doorbell_event.dart';
 import '../models/access_event.dart';
+import '../models/aws_config.dart';
 import '../core/app_config.dart';
 import '../core/utils/logger.dart';
 import 'aws_iot_service.dart';
 import 'kvs_webrtc_service.dart';
+import 'config_service.dart';
 
 abstract class DoorphoneManager extends ChangeNotifier {
   Future<void> initializeAWSIoT(String endpoint);
@@ -30,6 +32,7 @@ class DoorphoneManagerImpl extends DoorphoneManager {
   
   final AWSIoTService _awsIoTService;
   final KVSWebRTCService _kvsWebRTCService;
+  final ConfigService _configService;
   
   final StreamController<DoorphoneDevice> _devicesController =
       StreamController<DoorphoneDevice>.broadcast();
@@ -45,8 +48,10 @@ class DoorphoneManagerImpl extends DoorphoneManager {
   DoorphoneManagerImpl({
     required AWSIoTService awsIoTService,
     required KVSWebRTCService kvsWebRTCService,
+    required ConfigService configService,
   }) : _awsIoTService = awsIoTService,
-       _kvsWebRTCService = kvsWebRTCService;
+       _kvsWebRTCService = kvsWebRTCService,
+       _configService = configService;
 
   @override
   Stream<DoorphoneDevice> get devices => _devicesController.stream;
@@ -93,6 +98,18 @@ class DoorphoneManagerImpl extends DoorphoneManager {
     );
 
     try {
+      // Get AWS credentials from config
+      final awsConfig = await _configService.getAWSConfig();
+      if (awsConfig == null) {
+        throw Exception('AWS configuration not found. Please configure AWS credentials first.');
+      }
+      
+      // Set AWS credentials for KVS WebRTC
+      await (_kvsWebRTCService as KVSWebRTCServiceImpl).setCredentials(
+        accessKeyId: awsConfig.accessKeyId,
+        secretAccessKey: awsConfig.secretAccessKey,
+      );
+      
       // Initialize KVS WebRTC for this device
       await _kvsWebRTCService.initialize(device.kvsChannelName, device.awsRegion);
       await _kvsWebRTCService.connectAsViewer(device.kvsChannelName);

@@ -46,6 +46,7 @@ class DoorphoneViewerApp extends StatelessWidget {
           create: (context) => DoorphoneManagerImpl(
             awsIoTService: context.read<AWSIoTService>(),
             kvsWebRTCService: context.read<KVSWebRTCService>(),
+            configService: context.read<ConfigService>(),
           ),
         ),
         Provider<NotificationService>(

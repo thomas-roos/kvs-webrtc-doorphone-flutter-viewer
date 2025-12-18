@@ -40,8 +40,8 @@ dependencies:
   # firebase_core: ^2.24.2
   # firebase_messaging: ^14.7.9
   
-  # WebRTC
-  flutter_webrtc: ^0.9.46
+  # WebRTC - Using native AWS KVS WebRTC SDK via platform channels
+  # flutter_webrtc: ^0.9.46  # Removed in favor of native implementation
   
   # AWS SDK (using HTTP client for AWS services)
   aws_common: ^0.6.2

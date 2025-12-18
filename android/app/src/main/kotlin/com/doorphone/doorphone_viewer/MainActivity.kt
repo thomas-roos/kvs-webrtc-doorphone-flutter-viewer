@@ -3,16 +3,22 @@ package com.doorphone.doorphone_viewer
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.EventChannel
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.doorphone.doorphone_viewer/native"
+    private lateinit var kvsWebRTCPlugin: KVSWebRTCPlugin
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         
+        // Initialize KVS WebRTC plugin
+        kvsWebRTCPlugin = KVSWebRTCPlugin(this)
+        
+        // Set up method channel for native functionality
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "handleDeepLink" -> {
@@ -29,6 +35,14 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
+        
+        // Set up KVS WebRTC method channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.doorphone.doorphone_viewer/kvs_webrtc")
+            .setMethodCallHandler(kvsWebRTCPlugin)
+            
+        // Set up KVS WebRTC event channel
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.doorphone.doorphone_viewer/kvs_webrtc_events")
+            .setStreamHandler(kvsWebRTCPlugin)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +55,13 @@ class MainActivity: FlutterActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIntent(intent)
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::kvsWebRTCPlugin.isInitialized) {
+            kvsWebRTCPlugin.dispose()
+        }
     }
 
     private fun handleIntent(intent: Intent?) {

@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import '../core/utils/logger.dart';
+import 'kvs_webrtc_platform.dart';
 
 enum WebRTCSignalingState { idle, connecting, connected, failed }
 
@@ -41,9 +40,10 @@ abstract class KVSWebRTCService {
 class KVSWebRTCServiceImpl implements KVSWebRTCService {
   static const Logger _logger = Logger('KVSWebRTCService');
   
-  WebSocketChannel? _signalingChannel;
-  RTCPeerConnection? _peerConnection;
-
+  String? _currentChannelName;
+  String? _accessKeyId;
+  String? _secretAccessKey;
+  String? _region;
 
   final StreamController<Map<String, dynamic>> _signalingController =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -54,6 +54,8 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
 
   WebRTCSignalingState _currentState = WebRTCSignalingState.idle;
   bool _isInitialized = false;
+  StreamSubscription? _platformStateSubscription;
+  StreamSubscription? _platformSignalingSubscription;
 
 
   @override
@@ -73,15 +75,41 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
   @override
   Future<void> initialize(String channelName, String region) async {
     try {
-      // Set up WebRTC configuration
-      await _setupWebRTCConfiguration();
+      _currentChannelName = channelName;
+      _region = region;
+      
+      // Initialize platform channel if credentials are available
+      if (_accessKeyId != null && _secretAccessKey != null) {
+        await KVSWebRTCPlatform.initialize(
+          accessKeyId: _accessKeyId!,
+          secretAccessKey: _secretAccessKey!,
+          region: region,
+        );
+      }
 
       _isInitialized = true;
-      _logger.info('Initialized for channel $channelName (simulated)');
+      _logger.info('Initialized for channel $channelName in region $region');
     } catch (e) {
       _logger.error('Initialization failed', e);
       _updateConnectionState(WebRTCSignalingState.failed);
       rethrow;
+    }
+  }
+  
+  /// Set AWS credentials for KVS WebRTC
+  Future<void> setCredentials({
+    required String accessKeyId,
+    required String secretAccessKey,
+  }) async {
+    _accessKeyId = accessKeyId;
+    _secretAccessKey = secretAccessKey;
+    
+    if (_isInitialized && _region != null) {
+      await KVSWebRTCPlatform.initialize(
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey,
+        region: _region!,
+      );
     }
   }
 
@@ -106,17 +134,38 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
       throw Exception('KVS WebRTC service not initialized');
     }
 
+    if (_accessKeyId == null || _secretAccessKey == null || _region == null) {
+      throw Exception('AWS credentials not set. Call setCredentials() first.');
+    }
+
     try {
+      _currentChannelName = channelName;
       _updateConnectionState(WebRTCSignalingState.connecting);
 
-      // Create peer connection
-      await _createPeerConnection();
+      // Connect using platform channel
+      await KVSWebRTCPlatform.connectAsViewer(
+        channelName: channelName,
+        region: _region!,
+        accessKeyId: _accessKeyId!,
+        secretAccessKey: _secretAccessKey!,
+      );
 
-      // Simulate connection delay
-      await Future.delayed(const Duration(seconds: 1));
+      // Listen to platform events
+      _platformStateSubscription?.cancel();
+      _platformStateSubscription = KVSWebRTCPlatform.getConnectionStateStream(channelName)
+          .listen((state) {
+        _updateConnectionState(_mapPlatformState(state));
+      });
+
+      _platformSignalingSubscription?.cancel();
+      _platformSignalingSubscription = KVSWebRTCPlatform.getSignalingStream(channelName)
+          .listen((message) {
+        _signalingController.add(message);
+        _handleSignalingMessage(message);
+      });
 
       _updateConnectionState(WebRTCSignalingState.connected);
-      _logger.info('Connected as viewer to $channelName (simulated)');
+      _logger.info('Connected as viewer to $channelName');
     } catch (e) {
       _logger.error('Failed to connect as viewer', e);
       _updateConnectionState(WebRTCSignalingState.failed);
@@ -126,12 +175,16 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
 
   @override
   Future<void> sendOffer(Map<String, dynamic> offer) async {
-    if (!isConnected) {
+    if (!isConnected || _currentChannelName == null) {
       throw Exception('Not connected to KVS WebRTC');
     }
 
     try {
-      _logger.debug('Offer sent (simulated)');
+      await KVSWebRTCPlatform.sendOffer(
+        channelName: _currentChannelName!,
+        offer: offer,
+      );
+      _logger.debug('Offer sent');
     } catch (e) {
       _logger.error('Failed to send offer', e);
       rethrow;
@@ -140,12 +193,16 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
 
   @override
   Future<void> sendAnswer(Map<String, dynamic> answer) async {
-    if (!isConnected) {
+    if (!isConnected || _currentChannelName == null) {
       throw Exception('Not connected to KVS WebRTC');
     }
 
     try {
-      _logger.debug('Answer sent (simulated)');
+      await KVSWebRTCPlatform.sendAnswer(
+        channelName: _currentChannelName!,
+        answer: answer,
+      );
+      _logger.debug('Answer sent');
     } catch (e) {
       _logger.error('Failed to send answer', e);
       rethrow;
@@ -154,12 +211,16 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
 
   @override
   Future<void> sendIceCandidate(Map<String, dynamic> candidate) async {
-    if (!isConnected) {
+    if (!isConnected || _currentChannelName == null) {
       throw Exception('Not connected to KVS WebRTC');
     }
 
     try {
-      _logger.debug('ICE candidate sent (simulated)');
+      await KVSWebRTCPlatform.sendIceCandidate(
+        channelName: _currentChannelName!,
+        candidate: candidate,
+      );
+      _logger.debug('ICE candidate sent');
     } catch (e) {
       _logger.error('Failed to send ICE candidate', e);
       rethrow;
@@ -169,8 +230,16 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
   @override
   Future<void> disconnect() async {
     try {
-      await _peerConnection?.close();
-      _signalingChannel?.sink.close();
+      if (_currentChannelName != null) {
+        await KVSWebRTCPlatform.disconnect(_currentChannelName!);
+      }
+      
+      _platformStateSubscription?.cancel();
+      _platformSignalingSubscription?.cancel();
+      _platformStateSubscription = null;
+      _platformSignalingSubscription = null;
+      
+      _currentChannelName = null;
       _updateConnectionState(WebRTCSignalingState.idle);
       _logger.info('Disconnected');
     } catch (e) {
@@ -178,51 +247,42 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
     }
   }
 
-  Future<void> _setupWebRTCConfiguration() async {
-    // Configure WebRTC settings for demo
-    _logger.debug('Configuration setup completed');
+  WebRTCSignalingState _mapPlatformState(KVSConnectionState platformState) {
+    switch (platformState) {
+      case KVSConnectionState.idle:
+        return WebRTCSignalingState.idle;
+      case KVSConnectionState.connecting:
+        return WebRTCSignalingState.connecting;
+      case KVSConnectionState.connected:
+        return WebRTCSignalingState.connected;
+      case KVSConnectionState.failed:
+      case KVSConnectionState.disconnected:
+        return WebRTCSignalingState.failed;
+    }
   }
 
-  Future<void> _createPeerConnection() async {
-    final configuration = <String, dynamic>{
-      'iceServers': [
-        {'urls': 'stun:stun.l.google.com:19302'},
-      ],
-      'sdpSemantics': 'unified-plan',
-    };
-
-    _peerConnection = await createPeerConnection(configuration);
-
-    _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
-      sendIceCandidate({
-        'candidate': candidate.candidate,
-        'sdpMid': candidate.sdpMid,
-        'sdpMLineIndex': candidate.sdpMLineIndex,
-      });
-    };
-
-    _peerConnection!.onAddStream = (MediaStream stream) {
-      _handleRemoteStream(stream);
-    };
-
-    _peerConnection!.onConnectionState = (RTCPeerConnectionState state) {
-      _logger.debug('Peer connection state changed to $state');
-      if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
-        _updateConnectionState(WebRTCSignalingState.failed);
-      }
-    };
+  void _handleSignalingMessage(Map<String, dynamic> message) {
+    final messageType = message['type'] as String?;
+    
+    switch (messageType) {
+      case 'remoteStreamAdded':
+        _handleRemoteStreamAdded(message);
+        break;
+      case 'iceCandidate':
+        // ICE candidate received from remote peer
+        _logger.debug('ICE candidate received');
+        break;
+      case 'iceConnectionStateChanged':
+        _logger.debug('ICE connection state: ${message['state']}');
+        break;
+    }
   }
 
-  // Signaling message handling methods removed for demo simplicity
+  void _handleRemoteStreamAdded(Map<String, dynamic> message) {
+    _logger.info('Remote stream added: ${message['streamId']}');
 
-  void _handleRemoteStream(MediaStream stream) {
-    // Convert MediaStream to VideoFrame and emit
-    // This is a simplified implementation - in practice, you'd need to
-    // extract frames from the video track and convert them to VideoFrame objects
-    _logger.info('Remote stream received with ${stream.getVideoTracks().length} video tracks');
-
-    // For now, emit a placeholder VideoFrame
-    // In a real implementation, you'd extract actual frame data
+    // Emit a placeholder VideoFrame for the UI
+    // In a real implementation, the platform channel would provide actual video frames
     final videoFrame = VideoFrame(
       data: Uint8List(0),
       width: 1920,
@@ -240,9 +300,12 @@ class KVSWebRTCServiceImpl implements KVSWebRTCService {
   }
 
   void dispose() {
+    _platformStateSubscription?.cancel();
+    _platformSignalingSubscription?.cancel();
     _signalingController.close();
     _videoStreamController.close();
     _connectionStateController.close();
     disconnect();
+    KVSWebRTCPlatform.dispose();
   }
 }
