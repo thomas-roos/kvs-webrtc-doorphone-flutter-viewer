@@ -9,11 +9,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.delay
 import java.util.concurrent.ConcurrentHashMap
 
-// AWS SDK imports - using available packages
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.regions.Region
-import com.amazonaws.regions.Regions
+// Placeholder implementation for KVS WebRTC
+// In production, this would import the actual AWS KVS WebRTC SDK
 
 class KVSWebRTCPlugin(private val context: Context) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
     
@@ -98,9 +95,8 @@ class KVSWebRTCPlugin(private val context: Context) : MethodChannel.MethodCallHa
                     "state" to "connecting"
                 ))
 
-                // Create AWS credentials
-                val credentials = BasicAWSCredentials(accessKeyId, secretAccessKey)
-                val credentialsProvider = AWSStaticCredentialsProvider(credentials)
+                // Store AWS credentials for future use
+                Log.d(TAG, "Storing AWS credentials for channel: $channelName")
 
                 // Store connection
                 val connection = KVSConnection(
